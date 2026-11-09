@@ -27,7 +27,7 @@ interface Props {
 
 const ROUTE_STYLE = { color: '#c4683b', weight: 3, opacity: 0.9, dashArray: '4 8' };
 const ROUTE_STYLE_REAL = { color: '#c4683b', weight: 4, opacity: 0.75 };
-const DAY_STYLE = { color: '#1f3d2d', weight: 5, opacity: 0.9 };
+const DAY_STYLE = { color: '#3a5b59', weight: 5, opacity: 0.9 };
 
 export function TripMap(props: Props) {
   const { mode, points, day, range, route } = props;

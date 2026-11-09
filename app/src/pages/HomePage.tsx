@@ -6,6 +6,8 @@ import { useToast } from '../context/ToastContext';
 import { useTrip } from '../context/TripContext';
 import { EXPLORE_ROUTES, POPULAR_ROUTES, VEHICLES } from '../data/catalog';
 import { DAY_TRIP_IDS, STOPS } from '../data/stops';
+import logo from '../assets/logo.png';
+import wordmark from '../assets/wordmark.png';
 
 export function HomePage() {
   const { state, dispatch } = useTrip();
@@ -26,10 +28,8 @@ export function HomePage() {
       <div className="hero">
         <div className="topbar">
           <div className="brand">
-            <span className="mark">
-              <Icon name="car" />
-            </span>
-            Roadtrip Norway
+            <img className="logo" src={logo} alt="" />
+            <img className="wordmark" src={wordmark} alt="Roadtrip Norway" />
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="iconbtn" aria-label="Varsler" onClick={() => toast('Ingen nye varsler')}>
