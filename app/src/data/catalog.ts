@@ -4,7 +4,6 @@ import type {
   ExploreRoute,
   InterestId,
   LatLng,
-  Review,
   RouteTemplate,
   Vehicle,
 } from '../types';
@@ -28,11 +27,11 @@ export const OSLO_BERGEN: RouteTemplate = {
   from: 'Oslo',
   to: 'Bergen',
   days: [
-    { day: 1, title: 'Oslo → Gvarv', km: 178, driveTime: '3 t 05 min', stops: ['kongsberg', 'heddal', 'lindheim'], suggestions: ['mjosey'] },
-    { day: 2, title: 'Gvarv → Rauland', km: 154, driveTime: '2 t 50 min', stops: ['vemork', 'gausta'], suggestions: ['rauland'] },
-    { day: 3, title: 'Rauland → Odda', km: 162, driveTime: '2 t 45 min', stops: ['haukeli', 'late'], suggestions: ['roldal'] },
-    { day: 4, title: 'Odda → Eidfjord', km: 74, driveTime: '1 t 25 min', stops: ['sider', 'voring'], suggestions: ['eidfjord'] },
-    { day: 5, title: 'Eidfjord → Bergen', km: 150, driveTime: '2 t 40 min', stops: ['voss', 'bryggen'], suggestions: ['floyen'] },
+    { day: 1, from: 'Oslo', to: 'Gvarv', toLocation: [59.388, 9.177], km: 178, minutes: 185, stops: ['kongsberg', 'heddal', 'lindheim'], suggestions: ['mjosey'] },
+    { day: 2, from: 'Gvarv', to: 'Rauland', toLocation: [59.7, 8.04], km: 154, minutes: 170, stops: ['vemork', 'gausta'], suggestions: ['rauland'] },
+    { day: 3, from: 'Rauland', to: 'Odda', toLocation: [60.069, 6.546], km: 162, minutes: 165, stops: ['haukeli', 'late'], suggestions: ['roldal'] },
+    { day: 4, from: 'Odda', to: 'Eidfjord', toLocation: [60.467, 7.072], km: 74, minutes: 85, stops: ['sider', 'voring'], suggestions: ['eidfjord'] },
+    { day: 5, from: 'Eidfjord', to: 'Bergen', toLocation: [60.392, 5.324], km: 150, minutes: 160, stops: ['voss', 'bryggen'], suggestions: ['floyen'] },
   ],
 };
 
@@ -65,15 +64,9 @@ export function cityLocation(name: string, fallback: 'from' | 'to'): LatLng {
   return key ? CITIES[key] : fallback === 'from' ? CITIES.Oslo : CITIES.Bergen;
 }
 
-// Placeholder reviews shown on every stop until real reviews exist.
-export const SAMPLE_REVIEWS: Review[] = [
-  { author: 'Hanne K.', initials: 'HK', rating: 5, text: 'Stoppet her på vei vestover i juli. Verdt avstikkeren, og det var lett å parkere med henger.' },
-  { author: 'Ola og Sigrid', initials: 'OS', rating: 4, text: 'Fint sted å strekke på beina med barna. Kom tidlig i helgene.' },
-];
-
 export const BUSINESS_PLANS: BusinessPlan[] = [
   { id: 'synlig', title: 'Synlig plassering', description: 'Stedet ditt vises på kartet for alle som kjører forbi.', price: 'Gratis' },
-  { id: 'fremhevet', title: 'Fremhevet stopp', description: 'Merket «Anbefalt stopp» og foreslått til reisende med riktige interesser.', price: 'Kr 1 499/mnd', tag: 'Mest valgt' },
+  { id: 'fremhevet', title: 'Fremhevet stopp', description: 'Foreslått til reisende med riktige interesser. Vises med merket «Annonse».', price: 'Kr 1 499/mnd', tag: 'Mest valgt' },
   { id: 'partner', title: 'Partner', description: 'Egne tilbud i appen, statistikk over besøkende og fast plass i populære ruter.', price: 'Kr 3 990/mnd' },
 ];
 

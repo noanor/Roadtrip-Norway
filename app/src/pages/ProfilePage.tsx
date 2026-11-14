@@ -1,10 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../components/Icon';
-import { useToast } from '../context/ToastContext';
 
 export function ProfilePage() {
   const navigate = useNavigate();
-  const toast = useToast();
 
   return (
     <>
@@ -33,7 +31,12 @@ export function ProfilePage() {
           <span>Lagrede steder</span>
           <Icon name="chev" />
         </button>
-        <button onClick={() => toast('Innstillinger kommer snart')}>
+        <button onClick={() => navigate('/pris')}>
+          <Icon name="tag" />
+          <span>Pris og annonser</span>
+          <Icon name="chev" />
+        </button>
+        <button onClick={() => navigate('/innstillinger')}>
           <Icon name="settings" />
           <span>Innstillinger</span>
           <Icon name="chev" />

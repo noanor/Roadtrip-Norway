@@ -6,7 +6,7 @@ import { StopMap } from '../components/map/StopMap';
 import { StopArt } from '../components/StopArt';
 import { useToast } from '../context/ToastContext';
 import { useTrip } from '../context/TripContext';
-import { getStop } from '../data/stops';
+import { getStop, priceLabel } from '../data/stops';
 import { dayOfStop, isOnRoute } from '../domain/trip';
 import { askOwner, getReviews } from '../services/api';
 import type { Review } from '../types';
@@ -19,12 +19,13 @@ export function StopDetailPage() {
   const back = useBack('/rute');
   const location = useLocation();
   const toast = useToast();
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<Review[] | null>(null);
   const [question, setQuestion] = useState<'idle' | 'writing' | 'sending' | 'sent'>('idle');
   const [questionText, setQuestionText] = useState('');
 
   useEffect(() => {
     let active = true;
+    setReviews(null);
     getReviews(stopId).then((r) => active && setReviews(r));
     return () => {
       active = false;
@@ -42,7 +43,8 @@ export function StopDetailPage() {
     );
   }
 
-  const day = dayOfStop(route, stop.id);
+  const day = dayOfStop(state, route, stop.id);
+  const price = priceLabel(stop);
   const added = isOnRoute(state, route, stop.id);
   const saved = state.saved.includes(stop.id);
   const cameFromRoute = (location.state as { from?: string } | null)?.from === 'route';
@@ -59,6 +61,11 @@ export function StopDetailPage() {
     // Figma flow: Stoppdetaljer → Rute & Kart 2
     if (cameFromRoute) navigate(-1);
     else navigate('/rute');
+  };
+
+  const removeFromRoute = () => {
+    dispatch({ type: 'removeStop', stopId: stop.id });
+    toast(`${stop.name} er fjernet fra ruten`);
   };
 
   const submitQuestion = async (e: FormEvent) => {
@@ -83,10 +90,15 @@ export function StopDetailPage() {
       </div>
 
       <div className="d-body">
-        {stop.recommended && (
-          <span className="badge y" style={{ alignSelf: 'flex-start', margin: 0 }}>
-            Anbefalt stopp
-          </span>
+        {stop.sponsored && (
+          <div>
+            <span className="badge ad" style={{ margin: '0 0 4px' }}>
+              Annonse
+            </span>
+            <p className="adnote">
+              Stedet betaler for å bli fremhevet. <button onClick={() => navigate('/pris')}>Les mer</button>
+            </p>
+          </div>
         )}
         <div>
           <h1 className="display">{stop.name}</h1>
@@ -128,6 +140,12 @@ export function StopDetailPage() {
           </button>
         </div>
 
+        {added && (
+          <button className="btn-outline" onClick={removeFromRoute}>
+            <Icon name="close" /> Fjern fra ruten
+          </button>
+        )}
+
         <p className="d-desc">{stop.description}</p>
         <StopMap stop={stop} />
         <div className="facts">
@@ -140,17 +158,19 @@ export function StopDetailPage() {
             <b>{stop.distanceFromRoute}</b>
           </div>
           <div>
-            <small>Pris</small>
-            <b>{stop.price}</b>
+            <small>{price.heading}</small>
+            <b>{price.value}</b>
           </div>
         </div>
 
         <div>
           <div className="eyebrow" style={{ marginBottom: 8 }}>
-            Fra følgere
+            Anmeldelser
+            {reviews && reviews.length > 0 && ` · viser ${reviews.length} av ${stop.reviewCount}`}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {reviews.map((r) => (
+            {reviews && reviews.length === 0 && <p className="adnote">Ingen anmeldelser å vise ennå.</p>}
+            {(reviews ?? []).map((r) => (
               <div className="review" key={r.author}>
                 <header>
                   <span className="avatar">{r.initials}</span>

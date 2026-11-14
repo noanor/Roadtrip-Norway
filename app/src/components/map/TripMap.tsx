@@ -70,7 +70,7 @@ export function TripMap(props: Props) {
               <Marker
                 key={`end-${i}`}
                 position={p.location}
-                icon={labelPin(p.kind === 'start' ? props.startLabel : props.endLabel)}
+                icon={labelPin(p.kind === 'start' ? props.startLabel : p.kind === 'end' ? props.endLabel : (p.label ?? ''))}
                 interactive={false}
                 zIndexOffset={500}
               />

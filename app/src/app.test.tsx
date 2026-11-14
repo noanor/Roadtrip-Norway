@@ -36,6 +36,8 @@ describe('every page renders', () => {
     ['/stopp/hadeland', /Hadeland Glassverk/],
     ['/lagret', /Lagret/],
     ['/profil', /Profil/],
+    ['/pris', /Gratis for reisende/],
+    ['/innstillinger', /Maks kjøring per dag/],
     ['/for-aktorer', /Bli oppdaget av bilturister langs veien/],
   ];
   it.each(pages)('%s', (path, heading) => {
@@ -85,6 +87,56 @@ describe('flows', () => {
     expect(router.state.location.pathname).toBe('/rute');
     expect(await screen.findByText('Lagt til av deg')).toBeTruthy();
     expect(screen.queryByText('Forslag langs veien')).toBeNull();
+  });
+
+  it('a stop can be removed from the route in edit mode', () => {
+    renderAt('/rute');
+    expect(screen.queryByRole('button', { name: /Fjern Heddal stavkirke/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Endre stopp' }));
+    fireEvent.click(screen.getByRole('button', { name: /Fjern Heddal stavkirke/ }));
+    expect(screen.getByText('Heddal stavkirke er fjernet fra dag 1')).toBeTruthy();
+    // it is offered again as a suggestion
+    expect(screen.getByRole('button', { name: 'Legg Heddal stavkirke til i ruten' })).toBeTruthy();
+  });
+
+  it('a paid placement is marked as an ad in the list and on its page', () => {
+    renderAt('/rute');
+    expect(screen.getByText('Annonse')).toBeTruthy();
+    expect(screen.queryByText('Anbefalt stopp')).toBeNull();
+    cleanup();
+    renderAt('/stopp/mjosey');
+    expect(screen.getByText('Annonse')).toBeTruthy();
+    expect(screen.getByText(/Stedet betaler for å bli fremhevet/)).toBeTruthy();
+  });
+
+  it('each stop shows its own reviews', async () => {
+    renderAt('/stopp/mjosey');
+    expect(await screen.findByText(/viser 2 av 126/)).toBeTruthy();
+    const bakery = Array.from(document.querySelectorAll('.review p')).map((p) => p.textContent);
+    expect(bakery).toHaveLength(2);
+    cleanup();
+    renderAt('/stopp/rauland');
+    expect(await screen.findByText(/viser 2 av 54/)).toBeTruthy();
+    const farm = Array.from(document.querySelectorAll('.review p')).map((p) => p.textContent);
+    expect(farm).toHaveLength(2);
+    expect(farm.some((text) => bakery.includes(text))).toBe(false);
+  });
+
+  it('a three-day trip ends in Bergen and warns about a long day', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ days: 3, activeDay: 2 }));
+    renderAt('/rute');
+    expect(screen.getByText(/Gvarv → Odda/)).toBeTruthy();
+    expect(screen.getByText(/Lang kjøredag/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Dag 3' }));
+    expect(screen.getByText(/Odda → Bergen/)).toBeTruthy();
+  });
+
+  it('nothing is saved or chosen before the traveller does it', () => {
+    renderAt('/lagret');
+    expect(screen.getByText(/Trykk på bokmerket/)).toBeTruthy();
+    cleanup();
+    renderAt('/interesser');
+    expect(screen.getByRole('button', { name: /0 valgt/ })).toBeTruthy();
   });
 
   it('the back button on a page opened from a link stays inside the app', () => {

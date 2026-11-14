@@ -45,15 +45,22 @@ export interface Stop {
   distanceFromRoute: string;
   price: string;
   description: string;
-  recommended?: boolean;
+  /** Paid placement (the «Fremhevet stopp» plan). Always shown to travellers as «Annonse». */
+  sponsored?: boolean;
+  /** Serves food you can sit down for (lunch, café). */
+  serving?: boolean;
   location: LatLng;
 }
 
 export interface DayPlan {
   day: number;
-  title: string;
+  /** Where the day starts and where the night is spent. */
+  from: string;
+  to: string;
+  toLocation: LatLng;
+  /** Fallback numbers, used until the routing service has answered. */
   km: number;
-  driveTime: string;
+  minutes: number;
   stops: string[];
   suggestions: string[];
 }

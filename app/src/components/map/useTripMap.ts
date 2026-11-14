@@ -33,7 +33,7 @@ export function useTripMap(day: number | null, showSuggestions = true) {
     onOpenStop: (stopId: string) => navigate(`/stopp/${stopId}`, { state: { from: 'route' } }),
     /** Adds the stop to its day and returns that day. */
     onAddStop: (stopId: string): number => {
-      const target = dayOfStop(route, stopId) ?? state.activeDay;
+      const target = dayOfStop(state, route, stopId) ?? state.activeDay;
       dispatch({ type: 'addStop', stopId, day: target });
       toast(`${STOPS[stopId].name} er lagt til dag ${target}`);
       return target;

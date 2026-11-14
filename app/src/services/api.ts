@@ -1,14 +1,14 @@
 import type { BusinessRegistration, Review } from '../types';
-import { SAMPLE_REVIEWS } from '../data/catalog';
+import { REVIEWS } from '../data/reviews';
 
 // Boundary to the future backend. Every call is async so pages don't change when the mock
 // is replaced by real HTTP requests. Nothing here leaves the browser yet.
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function getReviews(_stopId: string): Promise<Review[]> {
+export async function getReviews(stopId: string): Promise<Review[]> {
   await delay(150);
-  return SAMPLE_REVIEWS;
+  return REVIEWS[stopId] ?? [];
 }
 
 export async function askOwner(stopId: string, question: string): Promise<void> {

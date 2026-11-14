@@ -33,13 +33,18 @@ describe('tripReducer edge cases', () => {
     expect(tripReducer(one, { type: 'removeVia', index: -1 }).via).toEqual(['']);
   });
 
-  it('keeps added stops when days are reduced, but leaves them out of the trip', () => {
+  it('keeps every stop on the trip when days are reduced', () => {
     let s = tripReducer(initialTripState, { type: 'addStop', stopId: 'floyen', day: 5 });
     const before = totalStops(s, route);
     s = tripReducer(s, { type: 'changeDays', delta: -3 });
-    expect(s.added[5]).toEqual(['floyen']);
-    expect(tripPoints(s, route).some((p) => p.stopId === 'floyen')).toBe(false);
-    expect(totalStops(s, route)).toBeLessThan(before);
+    expect(s.added).toEqual(['floyen']);
+    expect(tripPoints(s, route).some((p) => p.stopId === 'floyen')).toBe(true);
+    expect(totalStops(s, route)).toBe(before);
+  });
+
+  it('keeps the daily driving limit between 2 and 8 hours', () => {
+    expect(tripReducer(initialTripState, { type: 'changeMaxDrive', delta: -10 }).maxDriveHours).toBe(2);
+    expect(tripReducer(initialTripState, { type: 'changeMaxDrive', delta: 10 }).maxDriveHours).toBe(8);
   });
 
   it('a one-day trip spans from start to end', () => {
@@ -86,7 +91,8 @@ describe('restoreTripState (data saved in the browser)', () => {
       interests: ['mat', 'shopping'],
       vehicle: 'Traktor',
     });
-    expect(s.added).toEqual({ 1: ['mjosey'] });
+    // stops saved per day by an older version are kept; the day is worked out from the route
+    expect(s.added).toEqual(['mjosey', 'floyen', 'late']);
     expect(s.saved).toEqual(['gausta']);
     expect(s.interests).toEqual(['mat']);
     expect(s.vehicle).toBe(initialTripState.vehicle);

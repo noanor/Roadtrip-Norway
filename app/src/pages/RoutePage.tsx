@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { useBack } from '../hooks/useBack';
@@ -6,8 +7,19 @@ import { useTripMap } from '../components/map/useTripMap';
 import { StopListItem, SuggestionItem } from '../components/StopListItem';
 import { useToast } from '../context/ToastContext';
 import { useTrip } from '../context/TripContext';
+import { INTERESTS } from '../data/catalog';
 import { STOPS } from '../data/stops';
-import { dayCount, dayPlan, dayStops, daySuggestions, totalKm, totalStops } from '../domain/trip';
+import {
+  dayCount,
+  dayRange,
+  dayStops,
+  daySuggestions,
+  dayTitle,
+  matchesInterests,
+  totalStops,
+  tripDays,
+  unmetInterests,
+} from '../domain/trip';
 import { formatDuration, sumLegs } from '../services/routing';
 
 export function RoutePage() {
@@ -15,22 +27,37 @@ export function RoutePage() {
   const navigate = useNavigate();
   const back = useBack('/');
   const toast = useToast();
-  const day = state.activeDay;
+  const [editing, setEditing] = useState(false);
+  const [onlyServing, setOnlyServing] = useState(false);
   const days = dayCount(state, route);
-  const plan = dayPlan(route, day) ?? route.days[0];
+  const plans = tripDays(state, route);
+  const day = Math.min(state.activeDay, days);
+  const plan = plans[day - 1];
   const map = useTripMap(day);
 
-  // Prefer real driving numbers once the routing service has answered.
+  // Real driving numbers once the routing service has answered, the planned ones until then.
+  // The trip total is the sum of the days as shown, so the numbers always add up.
   const real = map.drivingRoute;
-  const dayStats = real ? sumLegs(real, map.range[0], map.range[1]) : null;
-  const totalRealKm = real ? sumLegs(real, 0, real.legs.length).km : null;
-  const dayLabel = dayStats
-    ? `${Math.round(dayStats.km)} km · ${formatDuration(dayStats.minutes)} kjøring`
-    : `${plan.km} km · ${plan.driveTime} kjøring`;
-  const tripLabel = totalRealKm !== null ? `${Math.round(totalRealKm)} km kjørevei` : `ca. ${totalKm(state, route)} km`;
+  const numbers = plans.map((p) => {
+    if (!real) return { km: p.km, minutes: p.minutes };
+    const [from, to] = dayRange(map.points, p.day, days);
+    const sum = sumLegs(real, from, to);
+    return { km: Math.round(sum.km), minutes: sum.minutes };
+  });
+  const totalKm = numbers.reduce((n, d) => n + d.km, 0);
+  const tripLabel = real ? `${totalKm} km kjørevei` : `ca. ${totalKm} km`;
+  const tooLong = (d: number) => numbers[d - 1].minutes > state.maxDriveHours * 60;
 
-  const isMatch = (id: string) => state.interests.includes(STOPS[id].interest);
-  const isUserAdded = (id: string) => (state.added[day] ?? []).includes(id);
+  const stops = dayStops(state, route, day);
+  const allSuggestions = daySuggestions(state, route, day);
+  const canFilterServing = allSuggestions.some((id) => STOPS[id].serving);
+  const suggestions = onlyServing && canFilterServing ? allSuggestions.filter((id) => STOPS[id].serving) : allSuggestions;
+  const unmet = unmetInterests(state, route).map((id) => INTERESTS.find((i) => i.id === id)?.label ?? id);
+
+  const remove = (id: string) => {
+    dispatch({ type: 'removeStop', stopId: id });
+    toast(`${STOPS[id].name} er fjernet fra dag ${day}`);
+  };
 
   return (
     <>
@@ -46,8 +73,8 @@ export function RoutePage() {
             {days} {days > 1 ? 'dager' : 'dag'} · {tripLabel} · {totalStops(state, route)} stopp
           </div>
         </div>
-        <button className="iconbtn light" aria-label="Endre rute" onClick={() => navigate('/')}>
-          <Icon name="edit" />
+        <button className="iconbtn light" aria-label={editing ? 'Ferdig med å endre' : 'Endre stopp'} aria-pressed={editing} onClick={() => setEditing((e) => !e)}>
+          <Icon name={editing ? 'check' : 'edit'} />
         </button>
       </div>
 
@@ -70,28 +97,57 @@ export function RoutePage() {
       </div>
 
       <div className="days" role="tablist">
-        {Array.from({ length: days }, (_, i) => i + 1).map((d) => (
-          <button key={d} role="tab" aria-selected={d === day} className={`day ${d === day ? 'on' : ''}`} onClick={() => dispatch({ type: 'setActiveDay', day: d })}>
-            Dag {d}
+        {plans.map((p) => (
+          <button
+            key={p.day}
+            role="tab"
+            aria-selected={p.day === day}
+            className={`day ${p.day === day ? 'on' : ''}`}
+            title={tooLong(p.day) ? `Over ${state.maxDriveHours} timer kjøring` : undefined}
+            onClick={() => dispatch({ type: 'setActiveDay', day: p.day })}
+          >
+            Dag {p.day}
+            {tooLong(p.day) && <span className="dot" />}
           </button>
         ))}
       </div>
       <div className="dayinfo">
-        Dag {day} · {plan.title} · {dayLabel}
+        Dag {day} · {dayTitle(plan)} · {numbers[day - 1].km} km · {formatDuration(numbers[day - 1].minutes)} kjøring
       </div>
 
+      {tooLong(day) && (
+        <div className="warnbox" role="note">
+          <Icon name="warn" />
+          <span>
+            Lang kjøredag: over {state.maxDriveHours} timer bak rattet. Legg til en dag eller fjern et stopp.{' '}
+            <button onClick={() => navigate('/innstillinger')}>Endre grensen</button>
+          </span>
+        </div>
+      )}
+
+      {editing && (
+        <div className="editbar">
+          <span>Trykk på krysset for å fjerne et stopp.</span>
+          <button onClick={() => navigate('/')}>Endre fra, til og dager</button>
+        </div>
+      )}
+
+      {unmet.length > 0 && <p className="note">Vi har ingen stopp for {unmet.join(' eller ')} langs denne ruten ennå.</p>}
+
       <div className="list">
-        {dayStops(state, route, day).map((id, i) => (
+        {stops.length === 0 && <div className="empty">Ingen stopp denne dagen ennå. Legg til fra forslagene under.</div>}
+        {stops.map((id, i) => (
           <StopListItem
             key={id}
             stop={STOPS[id]}
             number={i + 1}
             from="route"
             highlight={state.lastAdded === id}
+            onRemove={editing ? () => remove(id) : undefined}
             badge={
-              isUserAdded(id)
+              state.added.includes(id)
                 ? { text: 'Lagt til av deg', tone: 'g' }
-                : isMatch(id)
+                : matchesInterests(state, id)
                   ? { text: 'Passer dine interesser', tone: 'y' }
                   : undefined
             }
@@ -99,14 +155,24 @@ export function RoutePage() {
         ))}
       </div>
 
-      {daySuggestions(state, route, day).length > 0 && (
+      {allSuggestions.length > 0 && (
         <>
           <div className="section-h" style={{ paddingTop: 18 }}>
             <h2 style={{ fontSize: 18 }}>Forslag langs veien</h2>
           </div>
+          {canFilterServing && (
+            <div className="filterchips">
+              <button className={`chip ${onlyServing ? '' : 'on'}`} aria-pressed={!onlyServing} onClick={() => setOnlyServing(false)}>
+                Alle
+              </button>
+              <button className={`chip ${onlyServing ? 'on' : ''}`} aria-pressed={onlyServing} onClick={() => setOnlyServing(true)}>
+                Spisesteder
+              </button>
+            </div>
+          )}
           <div className="list">
-            {daySuggestions(state, route, day).map((id) => (
-              <SuggestionItem key={id} stop={STOPS[id]} onAdd={() => map.onAddStop(id)} />
+            {suggestions.map((id) => (
+              <SuggestionItem key={id} stop={STOPS[id]} match={matchesInterests(state, id)} onAdd={() => map.onAddStop(id)} />
             ))}
           </div>
         </>

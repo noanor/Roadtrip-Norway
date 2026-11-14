@@ -5,9 +5,11 @@ import { FullMapPage } from './pages/FullMapPage';
 import { HomePage } from './pages/HomePage';
 import { InterestsPage } from './pages/InterestsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { PricingPage } from './pages/PricingPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { RoutePage } from './pages/RoutePage';
 import { SavedPage } from './pages/SavedPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { StopDetailPage } from './pages/StopDetailPage';
 
 // Shared by the browser router (App.tsx) and the memory router in tests.
@@ -22,6 +24,8 @@ export const routes: RouteObject[] = [
       { path: '/stopp/:stopId', element: <StopDetailPage /> },
       { path: '/lagret', element: <SavedPage /> },
       { path: '/profil', element: <ProfilePage /> },
+      { path: '/pris', element: <PricingPage /> },
+      { path: '/innstillinger', element: <SettingsPage /> },
       { path: '/for-aktorer', element: <BusinessPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

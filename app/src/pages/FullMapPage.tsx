@@ -5,7 +5,7 @@ import { TripMap } from '../components/map/TripMap';
 import { useTripMap } from '../components/map/useTripMap';
 import { useToast } from '../context/ToastContext';
 import { useTrip } from '../context/TripContext';
-import { dayCount, dayPlan, totalStops } from '../domain/trip';
+import { dayCount, dayPlan, dayTitle, totalStops } from '../domain/trip';
 import type { LatLng } from '../types';
 
 export function FullMapPage() {
@@ -18,6 +18,7 @@ export function FullMapPage() {
   const [userPosition, setUserPosition] = useState<LatLng | null>(null);
   const map = useTripMap(day, showSuggestions);
   const days = dayCount(state, route);
+  const plan = day !== null ? dayPlan(state, route, day) : undefined;
 
   const selectDay = (d: number | null) => {
     setDay(d);
@@ -62,7 +63,7 @@ export function FullMapPage() {
           <b>
             {state.from} → {state.to}
           </b>
-          <small>{day !== null ? `Dag ${day} · ${dayPlan(route, day)?.title}` : `Hele turen · ${totalStops(state, route)} stopp`}</small>
+          <small>{day !== null && plan ? `Dag ${day} · ${dayTitle(plan)}` : `Hele turen · ${totalStops(state, route)} stopp`}</small>
         </div>
       </div>
       <div className="map-chips">

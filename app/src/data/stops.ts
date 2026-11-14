@@ -11,13 +11,13 @@ const list: Stop[] = [
   },
   {
     id: 'mjosey', name: 'Mjøsey Bakeri', place: 'Kongsberg', type: 'Bakeri & kafé', interest: 'mat', art: 'cabin',
-    travelHint: '5 min avstikker', rating: 4.8, reviewCount: 126, openingHours: '07–17', distanceFromRoute: '400 m', price: 'Kr', recommended: true,
+    travelHint: '5 min avstikker', rating: 4.8, reviewCount: 126, openingHours: '07–17', distanceFromRoute: '400 m', price: 'Kr', sponsored: true, serving: true,
     location: [59.668, 9.65],
     description: 'Lite familiebakeri i et gammelt tømmerhus rett ved riksveien. Kanelboller, surdeigsbrød og kaffe fra lokal brenner. Det er parkering for bobil og lading for elbil i tunet, og bordene ute har utsikt over Lågen.',
   },
   {
     id: 'heddal', name: 'Heddal stavkirke', place: 'Notodden', type: 'Stavkirke', interest: 'historie', art: 'church',
-    travelHint: '35 min fra Kongsberg', rating: 4.7, reviewCount: 540, openingHours: '10–17', distanceFromRoute: '0 km', price: 'Kr 120',
+    travelHint: '35 min fra Kongsberg', rating: 4.7, reviewCount: 540, openingHours: '10–17', distanceFromRoute: '0 km', price: 'Kr 120', serving: true,
     location: [59.5795, 9.1747],
     description: 'Norges største stavkirke, bygget rundt år 1250. Kirken er fortsatt i bruk, og besøkssenteret ved siden av har kafé og toaletter.',
   },
@@ -41,13 +41,13 @@ const list: Stop[] = [
   },
   {
     id: 'rauland', name: 'Rauland Gardsmat', place: 'Rauland', type: 'Gårdsbutikk', interest: 'mat', art: 'cabin',
-    travelHint: '10 min avstikker', rating: 4.6, reviewCount: 54, openingHours: '10–18', distanceFromRoute: '900 m', price: 'Kr',
+    travelHint: '10 min avstikker', rating: 4.6, reviewCount: 54, openingHours: '10–18', distanceFromRoute: '900 m', price: 'Kr', serving: true,
     location: [59.7, 8.04],
     description: 'Gårdsbutikk med spekemat, rømme og flatbrød fra egne dyr. Stopp for en kopp kaffe ved vinduet mot Totak.',
   },
   {
     id: 'haukeli', name: 'Haukeliseter fjellstue', place: 'Haukelifjell', type: 'Fjellstue', interest: 'overnatting', art: 'cabin',
-    travelHint: '1 t 40 min fra Rauland', rating: 4.4, reviewCount: 230, openingHours: '08–22', distanceFromRoute: '0 km', price: 'Kr Kr',
+    travelHint: '1 t 40 min fra Rauland', rating: 4.4, reviewCount: 230, openingHours: '08–22', distanceFromRoute: '0 km', price: 'Kr Kr', serving: true,
     location: [59.814, 7.204],
     description: 'Klassisk fjellstue fra 1890-tallet ved Ståvatn. Spis rømmegrøt i spisesalen eller bli en natt før du kjører over fjellet.',
   },
@@ -126,3 +126,16 @@ export function getStop(id: string): Stop | undefined {
 }
 
 export const DAY_TRIP_IDS = ['hadeland', 'kistefos', 'drobak'];
+
+/** How far the stop is from the planned drive, as shown in lists: "400 m fra ruten" or "langs ruten". */
+export function distanceLabel(stop: Stop): string {
+  return /^0\s/.test(stop.distanceFromRoute) ? 'langs ruten' : `${stop.distanceFromRoute} fra ruten`;
+}
+
+const PRICE_LEVELS: Record<string, string> = { Kr: 'Rimelig', 'Kr Kr': 'Middels', 'Kr Kr Kr': 'Dyrt' };
+
+/** Price as shown to travellers. Stops without a fixed entrance fee have a price level instead. */
+export function priceLabel(stop: Stop): { heading: string; value: string } {
+  const level = PRICE_LEVELS[stop.price];
+  return level ? { heading: 'Prisnivå', value: level } : { heading: 'Pris', value: stop.price };
+}

@@ -63,6 +63,7 @@ src/
 | `/rute/kart` | Fullskjermkart |
 | `/stopp/:stopId` | Stoppdetaljer |
 | `/lagret`, `/profil` | Lagret, Profil |
+| `/pris`, `/innstillinger` | Pris og annonser, Innstillinger (maks kjøring per dag) |
 | `/for-aktorer` | For lokale aktører |
 
 ## Videre arbeid
