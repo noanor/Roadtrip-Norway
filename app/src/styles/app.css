@@ -298,3 +298,19 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .ask{display:flex;flex-direction:column;gap:8px}
 .field.via{margin-right:54px}
 .note-inline{margin:0;padding:10px 12px;border-radius:12px;background:#fbeee6;color:#7a3a1a;font-size:13px;line-height:1.4}
+/* fase 3: mine ruter */
+.trips{display:flex;flex-direction:column;gap:8px;padding:0 18px}
+.trip-card{display:flex;align-items:center;gap:10px;width:100%;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:6px 8px 6px 14px;text-align:left}
+.trip-card.current{border-color:var(--green-2)}
+.trip-card .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding:8px 0;text-align:left}
+.trip-card small{font-size:12px;color:var(--muted)}
+.trip-card.confirm{background:#fbeee6;border-color:#f0d3c2}
+.trip-card.confirm .btn-outline,.btn-danger{width:auto;min-height:44px;padding:10px 14px;border-radius:12px;font-weight:700}
+.btn-danger{background:var(--rust);color:#fff}
+.rmmini{width:44px;height:44px}
+.note-info{margin:0;padding:10px 12px;border-radius:12px;background:var(--green-soft);color:var(--green-2);font-size:13px;line-height:1.4}
+.choice{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.seg2{display:grid;grid-template-columns:1fr 1fr;background:var(--cream);border-radius:12px;padding:3px;flex:1;max-width:240px}
+.seg2 button{min-height:44px;border-radius:9px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg2 button.on{background:var(--green);color:#fff}
+.choice + .help{margin-top:-6px}

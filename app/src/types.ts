@@ -73,6 +73,8 @@ export interface RouteTemplate {
   to: string;
   fromLocation: LatLng;
   toLocation: LatLng;
+  /** Made by the app along the road (see domain/autoRoute.ts), not a hand-picked trip. */
+  auto?: boolean;
   days: DayPlan[];
 }
 

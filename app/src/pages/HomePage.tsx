@@ -4,7 +4,7 @@ import { Icon } from '../components/Icon';
 import { StopArt } from '../components/StopArt';
 import { useToast } from '../context/ToastContext';
 import { useTrip } from '../context/TripContext';
-import { EXPLORE_ROUTES, knownPlace, PLACE_NAMES, VEHICLES } from '../data/catalog';
+import { EXPLORE_ROUTES, PLACE_NAMES, VEHICLES } from '../data/catalog';
 import { DAY_TRIP_IDS, STOPS } from '../data/stops';
 import { MAX_DAYS, MIN_DAYS, unknownPlaces, unreadCount } from '../domain/trip';
 import logo from '../assets/logo.png';
@@ -18,8 +18,7 @@ export function HomePage() {
   const toast = useToast();
   const unread = unreadCount(state);
   const [moreOpen, setMoreOpen] = useState(false);
-  const bothKnown = !!knownPlace(state.from) && !!knownPlace(state.to);
-  const noTrip = bothKnown && !route;
+  const madeByApp = route?.auto === true;
 
   const next = () => {
     if (!state.from.trim() || !state.to.trim()) {
@@ -31,16 +30,13 @@ export function HomePage() {
       toast(`Vi kjenner ikke igjen «${unknown[0]}». Velg et sted fra listen.`);
       return;
     }
-    if (!route) {
-      toast('Vi har ingen ferdig tur mellom disse stedene ennå');
-      return;
-    }
+    if (!route) return;
     // the names as the trip spells them, so headings read «Oslo», not «oslo »
     dispatch({ type: 'setRoute', from: route.from, to: route.to });
     navigate('/interesser');
   };
 
-  const summary = `${state.vehicle} · ${state.flexible ? 'kan legge til en dag' : 'låst antall dager'}`;
+  const summary = `Biltype: ${state.vehicle}`;
 
   return (
     <>
@@ -96,9 +92,9 @@ export function HomePage() {
             <input id="to" list="places" autoComplete="off" value={state.to} onChange={(e) => dispatch({ type: 'setTo', value: e.target.value })} aria-label="Til" />
           </label>
         </div>
-        {noTrip && (
-          <p className="note-inline" role="status">
-            Vi har ingen ferdig tur fra {knownPlace(state.from)} til {knownPlace(state.to)} ennå. Velg en av de populære turene under.
+        {madeByApp && (
+          <p className="note-info" role="status">
+            Vi har ingen håndplukket tur fra {route.from} til {route.to}, så vi finner stopp langs veien for dere.
           </p>
         )}
         <datalist id="places">
@@ -110,18 +106,37 @@ export function HomePage() {
           <Icon name="plus" /> Legg til stopp underveis
         </button>
 
-        <div className="row">
-          <span className="row-label">Antall dager</span>
-          <div className="stepper">
-            <button aria-label="Færre dager" disabled={state.days <= MIN_DAYS} onClick={() => dispatch({ type: 'changeDays', delta: -1 })}>
-              <Icon name="minus" />
+        <div className="choice">
+          <span className="row-label" id="planQ">
+            Dagsplan
+          </span>
+          <div className="seg2" role="radiogroup" aria-labelledby="planQ" aria-describedby="planHelp">
+            <button role="radio" aria-checked={state.flexible} className={state.flexible ? 'on' : ''} onClick={() => dispatch({ type: 'setFlexible', value: true })}>
+              Del i dager
             </button>
-            <output>{state.days}</output>
-            <button aria-label="Flere dager" disabled={state.days >= MAX_DAYS} onClick={() => dispatch({ type: 'changeDays', delta: 1 })}>
-              <Icon name="plus" />
+            <button role="radio" aria-checked={!state.flexible} className={state.flexible ? '' : 'on'} onClick={() => dispatch({ type: 'setFlexible', value: false })}>
+              Bare forslag
             </button>
           </div>
         </div>
+        <p className="help" id="planHelp">
+          {state.flexible ? 'Vi velger stopp og overnatting for hver dag.' : 'Vi viser stopp langs veien, dere velger selv.'}
+        </p>
+
+        {state.flexible && (
+          <div className="row">
+            <span className="row-label">Antall dager</span>
+            <div className="stepper">
+              <button aria-label="Færre dager" disabled={state.days <= MIN_DAYS} onClick={() => dispatch({ type: 'changeDays', delta: -1 })}>
+                <Icon name="minus" />
+              </button>
+              <output>{state.days}</output>
+              <button aria-label="Flere dager" disabled={state.days >= MAX_DAYS} onClick={() => dispatch({ type: 'changeDays', delta: 1 })}>
+                <Icon name="plus" />
+              </button>
+            </div>
+          </div>
+        )}
 
         <button className="more" aria-expanded={moreOpen} aria-controls="moreOptions" onClick={() => setMoreOpen((o) => !o)}>
           <span>
@@ -147,26 +162,6 @@ export function HomePage() {
                   </button>
                 ))}
               </div>
-            </div>
-            <div className="opt">
-              <div className="row">
-                <span className="row-label" id="flexLabel">
-                  Ferdig dagsplan
-                </span>
-                <button
-                  className={`toggle ${state.flexible ? 'on' : ''}`}
-                  role="switch"
-                  aria-checked={state.flexible}
-                  aria-labelledby="flexLabel"
-                  aria-describedby="flexHelp"
-                  onClick={() => dispatch({ type: 'toggleFlexible' })}
-                />
-              </div>
-              <p className="help" id="flexHelp">
-                {state.flexible
-                  ? 'Vi kan foreslå å legge til en dag hvis en kjøredag blir for lang.'
-                  : `Turen er låst til ${state.days} ${state.days > 1 ? 'dager' : 'dag'}.`}
-              </p>
             </div>
           </div>
         )}

@@ -58,7 +58,8 @@ function RouteView({ route }: { route: RouteTemplate }) {
   const tripLabel = real ? `${totalKm} km kjørevei` : `ca. ${totalKm} km`;
   const tooLong = (d: number) => numbers[d - 1].minutes > state.maxDriveHours * 60;
   const via = viaPlaces(state);
-  const canAddDay = state.flexible && days < Math.min(MAX_DAYS, route.days.length);
+  // a trip the app planned is cut again for the new number of days; a hand-picked one has a fixed number
+  const canAddDay = days < MAX_DAYS && (route.auto ? route.days.length === days : days < route.days.length);
 
   const stops = dayStops(state, route, day);
   const allSuggestions = daySuggestions(state, route, day);
@@ -66,9 +67,11 @@ function RouteView({ route }: { route: RouteTemplate }) {
   const suggestions = onlyServing && canFilterServing ? allSuggestions.filter((id) => STOPS[id].serving) : allSuggestions;
   const unmet = unmetInterests(state, route).map((id) => INTERESTS.find((i) => i.id === id)?.label ?? id);
 
+  const withDays = state.flexible;
+
   const remove = (id: string) => {
     dispatch({ type: 'removeStop', stopId: id });
-    toast(`${STOPS[id].name} er fjernet fra dag ${day}`);
+    toast(`${STOPS[id].name} er fjernet fra ${withDays ? `dag ${day}` : 'ruten'}`);
   };
 
   return (
@@ -83,7 +86,7 @@ function RouteView({ route }: { route: RouteTemplate }) {
           </h1>
           <div className="sub">
             {via.length > 0 && <>via {via.join(', ')} · </>}
-            {days} {days > 1 ? 'dager' : 'dag'} · {tripLabel} · {totalStops(state, route)} stopp · {state.vehicle}
+            {withDays ? `${days} ${days > 1 ? 'dager' : 'dag'}` : 'Uten dagsplan'} · {tripLabel} · {totalStops(state, route)} stopp · {state.vehicle}
           </div>
         </div>
         <button className="iconbtn light" aria-label={editing ? 'Ferdig med å endre' : 'Endre stopp'} aria-pressed={editing} onClick={() => setEditing((e) => !e)}>
@@ -109,6 +112,8 @@ function RouteView({ route }: { route: RouteTemplate }) {
         </button>
       </div>
 
+      {withDays ? (
+        <>
       <div className="days" role="tablist">
         {plans.map((p) => (
           <button
@@ -127,8 +132,14 @@ function RouteView({ route }: { route: RouteTemplate }) {
       <div className="dayinfo">
         Dag {day} · {dayTitle(plan)} · {numbers[day - 1].km} km · {formatDuration(numbers[day - 1].minutes)} kjøring
       </div>
+        </>
+      ) : (
+        <div className="dayinfo" style={{ paddingTop: 12 }}>
+          Hele turen · {numbers[0].km} km · {formatDuration(numbers[0].minutes)} kjøring
+        </div>
+      )}
 
-      {tooLong(day) && (
+      {withDays && tooLong(day) && (
         <div className="warnbox" role="note">
           <Icon name="warn" />
           <span>
@@ -156,14 +167,28 @@ function RouteView({ route }: { route: RouteTemplate }) {
       {editing && (
         <div className="editbar">
           <span>Trykk på krysset for å fjerne et stopp.</span>
-          <button onClick={() => navigate('/')}>Endre fra, til og dager</button>
+          <button onClick={() => navigate('/')}>{withDays ? 'Endre fra, til og dager' : 'Endre fra og til'}</button>
         </div>
+      )}
+
+      {route.auto && (
+        <p className="note">
+          {allSuggestions.length + stops.length === 0
+            ? 'Vi har ingen stopp i katalogen langs denne veien ennå.'
+            : withDays
+              ? 'Dagsplanen er laget automatisk med stopp vi kjenner langs veien.'
+              : 'Forslagene er stopp vi kjenner langs veien.'}
+        </p>
       )}
 
       {unmet.length > 0 && <p className="note">Vi har ingen stopp for {unmet.join(' eller ')} langs denne ruten ennå.</p>}
 
       <div className="list">
-        {stops.length === 0 && <div className="empty">Ingen stopp denne dagen ennå. Legg til fra forslagene under.</div>}
+        {stops.length === 0 && (
+          <div className="empty">
+            {withDays ? 'Ingen stopp denne dagen ennå. Legg til fra forslagene under.' : 'Ingen stopp valgt ennå. Trykk + på forslagene under for å legge dem til.'}
+          </div>
+        )}
         {stops.map((id, i) => (
           <StopListItem
             key={id}
@@ -212,8 +237,15 @@ function RouteView({ route }: { route: RouteTemplate }) {
             Fortsett til dag {day + 1} <Icon name="arrow" />
           </button>
         ) : (
-          <button className="cta" onClick={() => toast('Ruten er lagret under Mine ruter')}>
-            Lagre ruten <Icon name="check" />
+          <button
+            className="cta"
+            onClick={() => {
+              const update = state.currentTripId !== null;
+              dispatch({ type: 'saveTrip', id: `trip_${Date.now()}`, savedAt: new Date().toISOString() });
+              toast(update ? 'Den lagrede ruten er oppdatert' : 'Ruten er lagret under Ruter');
+            }}
+          >
+            {state.currentTripId ? 'Lagre endringene' : 'Lagre ruten'} <Icon name="check" />
           </button>
         )}
       </div>

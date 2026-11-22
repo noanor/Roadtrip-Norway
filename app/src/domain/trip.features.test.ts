@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { OSLO_BERGEN } from '../data/routes';
 import {
   dayRange,
+  planOf,
   dayStops,
   daySuggestions,
   driveMinutes,
   initialTripState,
   restoreTripState,
   suitsVehicle,
+  tripDays,
   tripPoints,
   tripReducer,
   unknownPlaces,
@@ -98,5 +100,78 @@ describe('profile', () => {
     expect(restoreTripState({ profile: { name: 'Kari', email: 'k@example.com' } }).profile).toEqual({ name: 'Kari', email: 'k@example.com' });
     expect(restoreTripState({ profile: { name: '', email: 'k@example.com' } }).profile).toBeNull();
     expect(restoreTripState({ profile: 'Kari' }).profile).toBeNull();
+  });
+});
+
+describe('saved trips', () => {
+  const save = (s: TripState, id: string) => tripReducer(s, { type: 'saveTrip', id, savedAt: '2026-11-22T10:00:00.000Z' });
+
+  it('saves the trip and remembers it as the current one', () => {
+    const s = save({ ...initialTripState, days: 3, interests: ['mat'], added: ['mjosey'] }, 't1');
+    expect(s.savedTrips).toHaveLength(1);
+    expect(s.savedTrips[0]).toMatchObject({ id: 't1', from: 'Oslo', to: 'Bergen', days: 3, interests: ['mat'], added: ['mjosey'] });
+    expect(s.currentTripId).toBe('t1');
+  });
+
+  it('saving again updates the same trip instead of adding a copy', () => {
+    let s = save(initialTripState, 't1');
+    s = tripReducer(s, { type: 'addStop', stopId: 'mjosey', day: 1 });
+    s = save(s, 't2');
+    expect(s.savedTrips.map((t) => t.id)).toEqual(['t1']);
+    expect(s.savedTrips[0].added).toEqual(['mjosey']);
+  });
+
+  it('a new start or end makes the next save a new trip', () => {
+    let s = save(initialTripState, 't1');
+    s = tripReducer(s, { type: 'setRoute', from: 'Skien', to: 'Dalen' });
+    expect(s.currentTripId).toBeNull();
+    s = save(s, 't2');
+    expect(s.savedTrips.map((t) => t.id)).toEqual(['t2', 't1']);
+  });
+
+  it('opening a trip restores its stops and days exactly', () => {
+    const planned: TripState = { ...initialTripState, days: 3, via: ['Kongsberg'], vehicle: 'Bobil', interests: ['natur'], added: ['mjosey'], removed: ['heddal'] };
+    let s = save(planned, 't1');
+    s = tripReducer(s, { type: 'setRoute', from: 'Skien', to: 'Dalen' });
+    s = tripReducer(s, { type: 'setActiveDay', day: 2 });
+    s = tripReducer(s, { type: 'openTrip', id: 't1' });
+    expect(planOf(s)).toEqual(planOf(planned));
+    expect(s.activeDay).toBe(1);
+    expect(s.currentTripId).toBe('t1');
+  });
+
+  it('deletes a trip and forgets it as the current one', () => {
+    let s = save(initialTripState, 't1');
+    s = tripReducer(s, { type: 'deleteTrip', id: 't1' });
+    expect(s.savedTrips).toEqual([]);
+    expect(s.currentTripId).toBeNull();
+  });
+
+  it('survives a reload and drops broken trips', () => {
+    const s = save({ ...initialTripState, added: ['mjosey'] }, 't1');
+    const back = restoreTripState(JSON.parse(JSON.stringify({ ...s, savedTrips: [...s.savedTrips, { id: 'x' }, 'tull', { ...s.savedTrips[0], id: 't2', added: ['ghost', 'mjosey'], days: 99 }] })));
+    expect(back.savedTrips.map((t) => t.id)).toEqual(['t1', 't2']);
+    expect(back.savedTrips[0]).toEqual(s.savedTrips[0]);
+    expect(back.savedTrips[1].added).toEqual(['mjosey']);
+    expect(back.savedTrips[1].days).toBe(5);
+    expect(back.currentTripId).toBe('t1');
+    expect(restoreTripState({ currentTripId: 'ghost' }).currentTripId).toBeNull();
+  });
+});
+
+describe('without a day plan', () => {
+  it('the trip is one day from start to end, whatever number of days was chosen', () => {
+    const s: TripState = { ...initialTripState, days: 4, flexible: false };
+    expect(tripDays(s, route)).toHaveLength(1);
+    expect(tripDays(s, route)[0]).toMatchObject({ from: 'Oslo', to: 'Bergen' });
+    expect(dayStops(s, route, 1)).toEqual([]);
+    expect(daySuggestions(s, route, 1)).toEqual(expect.arrayContaining(['kongsberg', 'bryggen']));
+  });
+
+  it('turning the day plan off goes back to day 1, and on again keeps the chosen days', () => {
+    let s = tripReducer({ ...initialTripState, days: 3, activeDay: 3 }, { type: 'setFlexible', value: false });
+    expect(s.activeDay).toBe(1);
+    s = tripReducer(s, { type: 'setFlexible', value: true });
+    expect(tripDays(s, route)).toHaveLength(3);
   });
 });

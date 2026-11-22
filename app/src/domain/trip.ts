@@ -9,6 +9,7 @@ export interface TripState {
   to: string;
   via: string[];
   days: number;
+  /** «Ferdig dagsplan»: the trip is cut into days with stops put on it. Off: one trip, every stop a suggestion. */
   flexible: boolean;
   vehicle: Vehicle;
   interests: InterestId[];
@@ -24,6 +25,24 @@ export interface TripState {
   /** Answers from owners, newest first. */
   notifications: AppNotification[];
   profile: Profile | null;
+  /** Trips saved under «Mine ruter», newest first. */
+  savedTrips: SavedTrip[];
+  /** The saved trip being worked on, so saving again updates it instead of adding a copy. */
+  currentTripId: string | null;
+}
+
+/** The parts of the state that make up one trip. */
+const PLAN_FIELDS = ['from', 'to', 'via', 'days', 'flexible', 'vehicle', 'interests', 'added', 'removed'] as const;
+export type TripPlan = Pick<TripState, (typeof PLAN_FIELDS)[number]>;
+
+export interface SavedTrip extends TripPlan {
+  id: string;
+  /** ISO time it was last saved. */
+  savedAt: string;
+}
+
+export function planOf(state: TripPlan): TripPlan {
+  return Object.fromEntries(PLAN_FIELDS.map((k) => [k, state[k]])) as unknown as TripPlan;
 }
 
 export const MIN_DAYS = 1;
@@ -47,6 +66,8 @@ export const initialTripState: TripState = {
   lastAdded: null,
   notifications: [],
   profile: null,
+  savedTrips: [],
+  currentTripId: null,
 };
 
 export type TripAction =
@@ -59,7 +80,7 @@ export type TripAction =
   | { type: 'removeVia'; index: number }
   | { type: 'changeDays'; delta: number }
   | { type: 'setDays'; days: number }
-  | { type: 'toggleFlexible' }
+  | { type: 'setFlexible'; value: boolean }
   | { type: 'setVehicle'; value: Vehicle }
   | { type: 'toggleInterest'; id: InterestId }
   | { type: 'setActiveDay'; day: number }
@@ -70,18 +91,22 @@ export type TripAction =
   | { type: 'addNotification'; notification: AppNotification }
   | { type: 'markNotificationsRead' }
   | { type: 'signIn'; profile: Profile }
-  | { type: 'signOut' };
+  | { type: 'signOut' }
+  | { type: 'saveTrip'; id: string; savedAt: string }
+  | { type: 'openTrip'; id: string }
+  | { type: 'deleteTrip'; id: string };
 
 export function tripReducer(state: TripState, action: TripAction): TripState {
   switch (action.type) {
+    // a different start or end is a different trip: the next save adds a new one
     case 'setFrom':
-      return { ...state, from: action.value };
+      return { ...state, from: action.value, currentTripId: null };
     case 'setTo':
-      return { ...state, to: action.value };
+      return { ...state, to: action.value, currentTripId: null };
     case 'setRoute':
-      return { ...state, from: action.from, to: action.to };
+      return action.from === state.from && action.to === state.to ? state : { ...state, from: action.from, to: action.to, currentTripId: null };
     case 'swap':
-      return { ...state, from: state.to, to: state.from };
+      return { ...state, from: state.to, to: state.from, currentTripId: null };
     case 'addVia':
       return { ...state, via: [...state.via, ''] };
     case 'setVia':
@@ -94,8 +119,8 @@ export function tripReducer(state: TripState, action: TripAction): TripState {
       const days = Math.max(MIN_DAYS, Math.min(MAX_DAYS, wanted));
       return { ...state, days, activeDay: Math.min(state.activeDay, days) };
     }
-    case 'toggleFlexible':
-      return { ...state, flexible: !state.flexible };
+    case 'setFlexible':
+      return { ...state, flexible: action.value, activeDay: action.value ? state.activeDay : 1 };
     case 'setVehicle':
       return { ...state, vehicle: action.value };
     case 'toggleInterest':
@@ -142,6 +167,23 @@ export function tripReducer(state: TripState, action: TripAction): TripState {
       return { ...state, profile: { name: action.profile.name.trim(), email: action.profile.email.trim() } };
     case 'signOut':
       return { ...state, profile: null };
+    case 'saveTrip': {
+      const current = state.savedTrips.find((t) => t.id === state.currentTripId);
+      const trip: SavedTrip = { ...planOf(state), id: current?.id ?? action.id, savedAt: action.savedAt };
+      const others = state.savedTrips.filter((t) => t.id !== trip.id);
+      return { ...state, savedTrips: [trip, ...others], currentTripId: trip.id };
+    }
+    case 'openTrip': {
+      const trip = state.savedTrips.find((t) => t.id === action.id);
+      if (!trip) return state;
+      return { ...state, ...planOf(trip), activeDay: 1, lastAdded: null, currentTripId: trip.id };
+    }
+    case 'deleteTrip':
+      return {
+        ...state,
+        savedTrips: state.savedTrips.filter((t) => t.id !== action.id),
+        currentTripId: state.currentTripId === action.id ? null : state.currentTripId,
+      };
   }
 }
 
@@ -169,6 +211,9 @@ export function restoreTripState(raw: unknown): TripState {
       : [];
   const added = [...new Set(addedRaw.filter(isStopId))];
   const removed = Array.isArray(raw.removed) ? raw.removed.filter(isStopId).filter((id) => !added.includes(id)) : [];
+  const savedTrips = Array.isArray(raw.savedTrips)
+    ? raw.savedTrips.map(restoreSavedTrip).filter((t): t is SavedTrip => t !== null)
+    : s.savedTrips;
 
   return {
     from: typeof raw.from === 'string' ? raw.from : s.from,
@@ -190,7 +235,17 @@ export function restoreTripState(raw: unknown): TripState {
     profile: isObject(raw.profile) && typeof raw.profile.name === 'string' && typeof raw.profile.email === 'string' && raw.profile.name.trim()
       ? { name: raw.profile.name, email: raw.profile.email }
       : s.profile,
+    savedTrips,
+    currentTripId: savedTrips.some((t) => t.id === raw.currentTripId) ? (raw.currentTripId as string) : null,
   };
+}
+
+/** A saved trip read back from storage: its plan checked like the state itself, or null when unusable. */
+function restoreSavedTrip(raw: unknown): SavedTrip | null {
+  if (!isObject(raw) || typeof raw.id !== 'string' || typeof raw.savedAt !== 'string') return null;
+  if (typeof raw.from !== 'string' || typeof raw.to !== 'string') return null;
+  const { savedTrips: _ignored, ...plain } = raw;
+  return { ...planOf(restoreTripState(plain)), id: raw.id, savedAt: raw.savedAt };
 }
 
 function isNotification(v: unknown): v is AppNotification {
@@ -207,7 +262,8 @@ function isNotification(v: unknown): v is AppNotification {
 
 // ---------- selectors ----------
 
-export const dayCount = (state: TripState, route: RouteTemplate) => Math.min(state.days, route.days.length);
+/** Days the trip is cut into. Without a day plan it is one drive from start to end. */
+export const dayCount = (state: TripState, route: RouteTemplate) => (state.flexible ? Math.min(state.days, route.days.length) : 1);
 
 /** Sizes of `groups` runs of consecutive days, chosen so the longest run is as short as possible. */
 function splitEvenly(kms: number[], groups: number): number[] {
@@ -289,6 +345,8 @@ function isIncluded(state: TripState, plan: DayPlan, stopId: string): boolean {
   if (!suitsVehicle(state, stopId)) return false;
   if (state.added.includes(stopId)) return true;
   if (state.removed.includes(stopId)) return false;
+  // «Ferdig dagsplan» off: the traveller picks every stop from the suggestions
+  if (!state.flexible) return false;
   // nothing chosen yet: show the standard route
   if (state.interests.length === 0) return plan.stops.includes(stopId);
   // paid placements are never put on the route for the traveller, only suggested

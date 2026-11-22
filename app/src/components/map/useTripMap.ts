@@ -36,7 +36,7 @@ export function useTripMap(route: RouteTemplate, day: number | null, showSuggest
     onAddStop: (stopId: string): number => {
       const target = dayOfStop(state, route, stopId) ?? state.activeDay;
       dispatch({ type: 'addStop', stopId, day: target });
-      toast(`${STOPS[stopId].name} er lagt til dag ${target}`);
+      toast(`${STOPS[stopId].name} er lagt til ${state.flexible ? `dag ${target}` : 'i ruten'}`);
       return target;
     },
   };

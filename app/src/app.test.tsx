@@ -35,6 +35,7 @@ describe('every page renders', () => {
     ['/stopp/mjosey', /Mjøsey Bakeri/],
     ['/stopp/hadeland', /Hadeland Glassverk/],
     ['/lagret', /Lagret/],
+    ['/ruter', /Mine ruter/],
     ['/profil', /Profil/],
     ['/pris', /Gratis for reisende/],
     ['/innstillinger', /Maks kjøring per dag/],
@@ -202,18 +203,26 @@ describe('phase 1 features', () => {
     expect(screen.getByText(/· Bobil/)).toBeTruthy();
   });
 
-  it('offers to add a day to a long day when the plan is flexible', () => {
-    localStorage.setItem(config.storageKey, JSON.stringify({ days: 3, activeDay: 2, flexible: true }));
+  it('offers to add a day to a long day', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ days: 3, activeDay: 2 }));
     renderAt('/rute');
     fireEvent.click(screen.getByRole('button', { name: 'Legg til en dag' }));
     expect(screen.getAllByRole('tab')).toHaveLength(4);
   });
 
-  it('does not offer an extra day when the number of days is locked', () => {
-    localStorage.setItem(config.storageKey, JSON.stringify({ days: 3, activeDay: 2, flexible: false }));
+  it('without a day plan the trip is one drive and every stop is a suggestion to pick', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ flexible: false, days: 3 }));
     renderAt('/rute');
-    expect(screen.getByText(/Lang kjøredag/)).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Legg til en dag' })).toBeNull();
+    expect(screen.queryAllByRole('tab')).toHaveLength(0);
+    expect(screen.getByText(/Uten dagsplan/)).toBeTruthy();
+    expect(screen.getByText(/Hele turen ·/)).toBeTruthy();
+    expect(screen.queryByText(/Lang kjøredag/)).toBeNull();
+    expect(screen.getByText(/Ingen stopp valgt ennå/)).toBeTruthy();
+    // stops from the whole trip are offered, not only the first day's
+    expect(screen.getByRole('button', { name: 'Legg Bryggen i Bergen til i ruten' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Legg Heddal stavkirke til i ruten' }));
+    expect(screen.getByText('Heddal stavkirke er lagt til i ruten')).toBeTruthy();
+    expect(screen.getByText('Lagt til av deg')).toBeTruthy();
   });
 
   it('a stop that does not suit the vehicle cannot be added', () => {
@@ -256,13 +265,28 @@ describe('phase 1 features', () => {
 });
 
 describe('home page', () => {
-  it('keeps vehicle and day plan under «Flere valg», with their values in the summary', () => {
+  it('asks about a day plan first, and only then for the number of days', () => {
+    renderAt('/');
+    const yes = screen.getByRole('radio', { name: 'Del i dager' });
+    const no = screen.getByRole('radio', { name: 'Bare forslag' });
+    expect(yes.getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByText('Antall dager')).toBeTruthy();
+    fireEvent.click(no);
+    expect(no.getAttribute('aria-checked')).toBe('true');
+    expect(screen.queryByText('Antall dager')).toBeNull();
+    fireEvent.click(yes);
+    expect(screen.getByText('Antall dager')).toBeTruthy();
+    // the day plan question comes before the number of days
+    expect(screen.getByText('Dagsplan').compareDocumentPosition(screen.getByText('Antall dager')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('keeps the vehicle under «Flere valg», with the choice in the summary', () => {
     renderAt('/');
     expect(screen.queryByRole('button', { name: 'Bobil' })).toBeNull();
-    expect(screen.getByText('Bil · kan legge til en dag')).toBeTruthy();
+    expect(screen.getByText('Biltype: Bil')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Flere valg/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Bobil' }));
-    expect(screen.getByText('Bobil · kan legge til en dag')).toBeTruthy();
+    expect(screen.getByText('Biltype: Bobil')).toBeTruthy();
   });
 
   it('a popular tour fills in the route and its days and goes to step 2', () => {
@@ -277,12 +301,13 @@ describe('home page', () => {
 });
 
 describe('phase 2: trips between more places', () => {
-  it('tells the traveller when there is no trip between two known places', () => {
+  it('plans a trip along the road between places without a hand-picked trip', () => {
     const router = renderAt('/');
-    fireEvent.change(screen.getByLabelText('Til'), { target: { value: 'Tromsø' } });
-    expect(screen.getByText(/Vi har ingen ferdig tur fra Oslo til Tromsø ennå/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Til'), { target: { value: 'stavanger' } });
+    expect(screen.getByText(/Vi har ingen håndplukket tur fra Oslo til Stavanger/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Neste: velg interesser/ }));
-    expect(router.state.location.pathname).toBe('/');
+    expect(router.state.location.pathname).toBe('/interesser');
+    expect(screen.getByText(/Oslo → Stavanger/)).toBeTruthy();
   });
 
   it('a popular tour shows its own stops', () => {
@@ -300,8 +325,22 @@ describe('phase 2: trips between more places', () => {
     expect(screen.getByText(/Dag 1 · Bergen → Eidfjord/)).toBeTruthy();
   });
 
-  it('the route page explains when there is no trip', () => {
-    localStorage.setItem(config.storageKey, JSON.stringify({ from: 'Oslo', to: 'Tromsø' }));
+  it('a trip the app planned shows stops near the road and says it was made automatically', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ from: 'Oslo', to: 'Kongsberg', days: 1 }));
+    renderAt('/rute');
+    expect(screen.getAllByText(/Oslo → Kongsberg/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Dagsplanen er laget automatisk/)).toBeTruthy();
+    expect(screen.getAllByText(/Kongsberg/).length).toBeGreaterThan(1);
+  });
+
+  it('says so when the catalogue has no stops along the road', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ from: 'Tromsø', to: 'Bodø' }));
+    renderAt('/rute');
+    expect(screen.getByText(/ingen stopp i katalogen langs denne veien ennå/)).toBeTruthy();
+  });
+
+  it('the route page explains when a place is unknown', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ from: 'Oslo', to: 'Atlantis' }));
     renderAt('/rute');
     expect(screen.getByText('Ingen ferdig tur ennå')).toBeTruthy();
   });
@@ -318,5 +357,36 @@ describe('phase 2: trips between more places', () => {
     fireEvent.click(screen.getByRole('button', { name: /Planlegg dagstur hit/ }));
     expect(router.state.location.pathname).toBe('/interesser');
     expect(screen.getByText(/Oslo → Frogn/)).toBeTruthy();
+  });
+});
+
+describe('phase 3: saved trips', () => {
+  it('saves a trip, keeps it after a reload, opens and deletes it', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ from: 'Skien', to: 'Dalen', days: 2, activeDay: 2 }));
+    renderAt('/rute');
+    fireEvent.click(screen.getByRole('button', { name: /Lagre ruten/ }));
+    expect(screen.getByText('Ruten er lagret under Ruter')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Lagre endringene/ })).toBeTruthy();
+    cleanup();
+
+    // a reload, with another trip planned in the meantime
+    const saved = JSON.parse(localStorage.getItem(config.storageKey)!);
+    localStorage.setItem(config.storageKey, JSON.stringify({ ...saved, from: 'Oslo', to: 'Bergen', currentTripId: null }));
+    const router = renderAt('/ruter');
+    expect(screen.getByText(/Turen du planlegger nå/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^Skien → Dalen/ }));
+    expect(router.state.location.pathname).toBe('/rute');
+    expect(screen.getAllByText(/Skien → Dalen/).length).toBeGreaterThan(0);
+    cleanup();
+
+    renderAt('/ruter');
+    fireEvent.click(screen.getByRole('button', { name: 'Slett Skien → Dalen' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Slett' }));
+    expect(screen.getByText(/Ingen lagrede ruter ennå/)).toBeTruthy();
+  });
+
+  it('the Ruter tab is highlighted on the route page too', () => {
+    renderAt('/rute');
+    expect(screen.getByRole('link', { name: 'Ruter' }).className).toBe('on');
   });
 });

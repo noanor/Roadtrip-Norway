@@ -1,13 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, type Dispatch, type ReactNode } from 'react';
 import { config } from '../config';
 import { findRoute } from '../data/routes';
+import { useAutoRoute } from './useAutoRoute';
 import { initialTripState, restoreTripState, tripReducer, type TripAction, type TripState } from '../domain/trip';
 import type { RouteTemplate } from '../types';
 
 interface TripContextValue {
   state: TripState;
   dispatch: Dispatch<TripAction>;
-  /** Planned trip for the current from/to, or null when none is planned between those places yet. */
+  /** The hand-picked trip for the current from/to, else one the app plans along the road; null when a place is unknown. */
   route: RouteTemplate | null;
 }
 
@@ -34,7 +35,10 @@ export function TripProvider({ children }: { children: ReactNode }) {
     }
   }, [state]);
 
-  const route = useMemo(() => findRoute(state.from, state.to), [state.from, state.to]);
+  const planned = useMemo(() => findRoute(state.from, state.to), [state.from, state.to]);
+  // no hand-picked trip between the places: the app plans one along the road
+  const auto = useAutoRoute(planned === null, state.from, state.to, state.via, state.flexible ? state.days : 1);
+  const route = planned ?? auto;
   const value = useMemo(() => ({ state, dispatch, route }), [state, route]);
   return <TripContext.Provider value={value}>{children}</TripContext.Provider>;
 }

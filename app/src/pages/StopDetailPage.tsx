@@ -64,7 +64,7 @@ export function StopDetailPage() {
   const addToRoute = () => {
     if (day === null) return;
     dispatch({ type: 'addStop', stopId: stop.id, day });
-    toast(`${stop.name} er lagt til dag ${day}`);
+    toast(`${stop.name} er lagt til ${state.flexible ? `dag ${day}` : 'i ruten'}`);
     // Figma flow: Stoppdetaljer → Rute & Kart 2
     if (cameFromRoute) navigate(-1);
     else navigate('/rute');

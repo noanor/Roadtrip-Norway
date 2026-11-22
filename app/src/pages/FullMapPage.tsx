@@ -19,7 +19,7 @@ function FullMapView({ route }: { route: RouteTemplate }) {
   const back = useBack('/rute');
   const toast = useToast();
   /** null = whole trip */
-  const [day, setDay] = useState<number | null>(state.activeDay);
+  const [day, setDay] = useState<number | null>(state.flexible ? state.activeDay : null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [userPosition, setUserPosition] = useState<LatLng | null>(null);
   const map = useTripMap(route, day, showSuggestions);
@@ -73,10 +73,12 @@ function FullMapView({ route }: { route: RouteTemplate }) {
         </div>
       </div>
       <div className="map-chips">
-        <button className={`chip ${day === null ? 'on' : ''}`} onClick={() => selectDay(null)}>
-          Hele turen
-        </button>
-        {Array.from({ length: days }, (_, i) => i + 1).map((d) => (
+        {state.flexible && (
+          <button className={`chip ${day === null ? 'on' : ''}`} onClick={() => selectDay(null)}>
+            Hele turen
+          </button>
+        )}
+        {Array.from({ length: state.flexible ? days : 0 }, (_, i) => i + 1).map((d) => (
           <button key={d} className={`chip ${day === d ? 'on' : ''}`} onClick={() => selectDay(d)}>
             Dag {d}
           </button>

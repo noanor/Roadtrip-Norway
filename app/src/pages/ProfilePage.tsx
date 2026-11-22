@@ -78,7 +78,7 @@ export function ProfilePage() {
       )}
 
       <div className="menu">
-        <button onClick={() => navigate('/rute')}>
+        <button onClick={() => navigate('/ruter')}>
           <Icon name="route" />
           <span>Mine ruter</span>
           <Icon name="chev" />
