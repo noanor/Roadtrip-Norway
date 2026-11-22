@@ -45,6 +45,16 @@ export function planOf(state: TripPlan): TripPlan {
   return Object.fromEntries(PLAN_FIELDS.map((k) => [k, state[k]])) as unknown as TripPlan;
 }
 
+/**
+ * Whether the trip on screen is saved: `unsaved` (never saved), `saved` (saved and nothing changed
+ * since) or `changed` (saved, but the traveller has changed it since).
+ */
+export function saveStatus(state: TripState): 'unsaved' | 'saved' | 'changed' {
+  const saved = state.savedTrips.find((t) => t.id === state.currentTripId);
+  if (!saved) return 'unsaved';
+  return JSON.stringify(planOf(saved)) === JSON.stringify(planOf(state)) ? 'saved' : 'changed';
+}
+
 export const MIN_DAYS = 1;
 export const MAX_DAYS = 5;
 export const MIN_DRIVE_HOURS = 2;

@@ -376,7 +376,13 @@ describe('phase 3: saved trips', () => {
     renderAt('/rute');
     fireEvent.click(screen.getByRole('button', { name: /Lagre ruten/ }));
     expect(screen.getByText('Ruten er lagret under Ruter')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Lagre endringene/ })).toBeTruthy();
+    // the button itself says the trip is saved, until something changes
+    expect(screen.getByRole('button', { name: /Ruten er lagret/ })).toBeTruthy();
+    fireEvent.click(screen.getAllByRole('button', { name: /^Fjern / })[0]);
+    expect(screen.queryByRole('button', { name: /Ruten er lagret/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Lagre endringene/ }));
+    expect(screen.getByText('Endringene er lagret')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Ruten er lagret/ })).toBeTruthy();
     cleanup();
 
     // a reload, with another trip planned in the meantime
@@ -443,5 +449,14 @@ describe('saving from any day', () => {
     expect(screen.getByRole('tab', { selected: true }).textContent).toBe('Dag 2');
     fireEvent.click(screen.getByRole('button', { name: /Lagre ruten/ }));
     expect(screen.getByText('Ruten er lagret under Ruter')).toBeTruthy();
+  });
+});
+
+describe('saved state on the route page', () => {
+  it('the saved button leads to the list of saved trips', () => {
+    const router = renderAt('/rute');
+    fireEvent.click(screen.getByRole('button', { name: /Lagre ruten/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Ruten er lagret/ }));
+    expect(router.state.location.pathname).toBe('/ruter');
   });
 });
