@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "app", "runtimeExecutable": "npm", "runtimeArgs": ["--prefix", "app", "run", "dev", "--", "--port", "5173", "--strictPort"], "port": 5173 }
+    { "name": "app", "runtimeExecutable": "npm", "runtimeArgs": ["--prefix", "app", "run", "dev", "--", "--port", "5173", "--strictPort"], "port": 5173 },
+    { "name": "app-pages", "runtimeExecutable": "npm", "runtimeArgs": ["--prefix", "app", "run", "preview", "--", "--base", "/Roadtrip-Norway/", "--port", "4173", "--strictPort"], "port": 4173 }
   ]
 }

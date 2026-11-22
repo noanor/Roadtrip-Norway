@@ -21,8 +21,21 @@ npm run dev
 | `npm run preview` | Server det ferdige bygget lokalt |
 | `npm test` | Enhetstester (Vitest) |
 | `npm run typecheck` | Kun TypeScript-sjekk |
+| `npm run icons` | Lag app-ikonene på nytt fra `public/icon-source.png` |
 
 Kopier `.env.example` til `.env` for å bytte kartfliser eller ruteserver.
+
+### Installerbar app og GitHub Pages
+
+Appen er en PWA: den kan installeres fra nettleseren og får eget ikon på hjemskjermen.
+- **Android (Chrome):** åpne lenken og velg «Installer app» når den dukker opp (eller ⋮ → «Installer app»).
+- **iPhone (Safari):** Del → «Legg til på Hjem-skjerm».
+
+Selve appen fungerer uten nett etter første besøk, men kart og ruteberegning trenger nett.
+
+Hver push til `main` publiseres automatisk til GitHub Pages (`.github/workflows/pages.yml`), på `https://<bruker>.github.io/Roadtrip-Norway/`. Første gang må Pages slås på: **Settings → Pages → Source: GitHub Actions**.
+
+Rutene bruker `#` i adressen (for eksempel `/#/rute`), slik at oppfrisking og delte lenker virker på GitHub Pages.
 
 ### Tester
 
