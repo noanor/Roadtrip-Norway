@@ -234,23 +234,34 @@ function RouteView({ route }: { route: RouteTemplate }) {
         </>
       )}
 
-      <div className="pad foot">
-        {day < days ? (
-          <button className="cta green" onClick={() => dispatch({ type: 'setActiveDay', day: day + 1 })}>
-            Fortsett til dag {day + 1} <Icon name="arrow" />
-          </button>
-        ) : (
+      {withDays && day < days && (
+        <div className="pad foot">
           <button
-            className="cta"
+            className="btn-outline"
             onClick={() => {
-              const update = state.currentTripId !== null;
-              dispatch({ type: 'saveTrip', id: `trip_${Date.now()}`, savedAt: new Date().toISOString() });
-              toast(update ? 'Den lagrede ruten er oppdatert' : 'Ruten er lagret under Ruter');
+              dispatch({ type: 'setActiveDay', day: day + 1 });
+              // back to the top to see the new day's map and stops (scrollTop, like AppLayout: works everywhere)
+              const screen = document.querySelector('.screen');
+              if (screen) screen.scrollTop = 0;
             }}
           >
-            {state.currentTripId ? 'Lagre endringene' : 'Lagre ruten'} <Icon name="check" />
+            Fortsett til dag {day + 1} <Icon name="arrow" />
           </button>
-        )}
+        </div>
+      )}
+
+      {/* floats at the bottom of the screen, so saving never needs scrolling */}
+      <div className="sticky-foot">
+        <button
+          className="cta"
+          onClick={() => {
+            const update = state.currentTripId !== null;
+            dispatch({ type: 'saveTrip', id: `trip_${Date.now()}`, savedAt: new Date().toISOString() });
+            toast(update ? 'Den lagrede ruten er oppdatert' : 'Ruten er lagret under Ruter');
+          }}
+        >
+          {state.currentTripId ? 'Lagre endringene' : 'Lagre ruten'} <Icon name="check" />
+        </button>
       </div>
     </>
   );

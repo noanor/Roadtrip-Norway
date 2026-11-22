@@ -434,3 +434,14 @@ describe('ads in the prototype', () => {
     expect(screen.getByRole('button', { name: 'Legg Kanalbakeriet til i ruten' })).toBeTruthy();
   });
 });
+
+describe('saving from any day', () => {
+  it('the save button is there on day 1 too, next to «Fortsett til dag 2»', () => {
+    renderAt('/rute');
+    expect(screen.getByRole('button', { name: /Lagre ruten/ }).closest('.sticky-foot')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Fortsett til dag 2/ }));
+    expect(screen.getByRole('tab', { selected: true }).textContent).toBe('Dag 2');
+    fireEvent.click(screen.getByRole('button', { name: /Lagre ruten/ }));
+    expect(screen.getByText('Ruten er lagret under Ruter')).toBeTruthy();
+  });
+});
