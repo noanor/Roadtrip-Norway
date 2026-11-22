@@ -7,8 +7,8 @@ import { StopArt } from '../components/StopArt';
 import { useToast } from '../context/ToastContext';
 import { useTrip } from '../context/TripContext';
 import { getStop, priceLabel } from '../data/stops';
-import { dayOfStop, isOnRoute } from '../domain/trip';
-import { askOwner, getReviews } from '../services/api';
+import { dayOfStop, isOnRoute, suitsVehicle } from '../domain/trip';
+import { askOwner, getReviews, waitForOwnerAnswer } from '../services/api';
 import type { Review } from '../types';
 
 export function StopDetailPage() {
@@ -48,6 +48,9 @@ export function StopDetailPage() {
   const added = isOnRoute(state, route, stop.id);
   const saved = state.saved.includes(stop.id);
   const cameFromRoute = (location.state as { from?: string } | null)?.from === 'route';
+  const fits = suitsVehicle(state, stop.id);
+  const answers = state.notifications.filter((n) => n.stopId === stop.id);
+  const waiting = question === 'sent' && !answers.some((n) => n.question === questionText);
 
   const toggleSaved = () => {
     dispatch({ type: 'toggleSaved', stopId: stop.id });
@@ -71,8 +74,17 @@ export function StopDetailPage() {
   const submitQuestion = async (e: FormEvent) => {
     e.preventDefault();
     setQuestion('sending');
-    await askOwner(stop.id, questionText);
+    const asked = questionText;
+    await askOwner(stop.id, asked);
     setQuestion('sent');
+    // Keeps waiting after the traveller leaves the page: the answer arrives as a notification.
+    waitForOwnerAnswer(stop.id, stop.name, asked).then((answer) => {
+      dispatch({
+        type: 'addNotification',
+        notification: { id: `n_${Date.now()}`, stopId: stop.id, question: asked, answer, at: new Date().toISOString(), read: false },
+      });
+      toast(`${stop.name} har svart på spørsmålet ditt`);
+    });
   };
 
   return (
@@ -109,7 +121,11 @@ export function StopDetailPage() {
         </div>
 
         <div className="d-actions">
-          {day === null ? (
+          {!fits ? (
+            <button className="cta green" disabled>
+              <Icon name="warn" /> Passer ikke for {state.vehicle.toLowerCase()}
+            </button>
+          ) : day === null ? (
             <button
               className="cta green"
               onClick={() => {
@@ -186,14 +202,26 @@ export function StopDetailPage() {
         </div>
 
         <div className="ask">
-          {question === 'sent' ? (
+          {answers.map((n) => (
+            <div className="review" key={n.id}>
+              <b>Du spurte: {n.question}</b>
+              <p>{n.answer}</p>
+            </div>
+          ))}
+          {waiting ? (
             <div className="review">
               <b>Spørsmålet er sendt</b>
-              <p className="muted">{stop.name} svarer vanligvis innen en dag. Svaret dukker opp her.</p>
+              <p className="muted">{stop.name} svarer vanligvis innen en dag. Svaret dukker opp her og under Varsler.</p>
             </div>
-          ) : question === 'idle' ? (
-            <button className="btn-outline" onClick={() => setQuestion('writing')}>
-              Spørsmål til eieren?
+          ) : question === 'idle' || question === 'sent' ? (
+            <button
+              className="btn-outline"
+              onClick={() => {
+                setQuestionText('');
+                setQuestion('writing');
+              }}
+            >
+              {answers.length ? 'Nytt spørsmål til eieren?' : 'Spørsmål til eieren?'}
             </button>
           ) : (
             <form onSubmit={submitQuestion} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

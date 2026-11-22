@@ -30,12 +30,14 @@ const list: Stop[] = [
   {
     id: 'vemork', name: 'Vemork industrimuseum', place: 'Rjukan', type: 'Museum', interest: 'historie', art: 'museum',
     travelHint: '1 t 20 min fra Gvarv', rating: 4.7, reviewCount: 410, openingHours: '10–18', distanceFromRoute: '3 km', price: 'Kr 180',
+    notFor: ['Campingvogn'],
     location: [59.873, 8.495],
     description: 'Kraftstasjonen fra tungtvannsaksjonen under andre verdenskrig. Gå over hengebroen og se utstillingen om sabotasjen.',
   },
   {
     id: 'gausta', name: 'Gaustatoppen', place: 'Tinn', type: 'Fjelltopp', interest: 'natur', art: 'mount',
     travelHint: '25 min fra Rjukan', rating: 4.9, reviewCount: 880, openingHours: 'Hele døgnet', distanceFromRoute: '8 km', price: 'Gratis',
+    notFor: ['Bobil', 'Campingvogn'],
     location: [59.851, 8.654],
     description: 'Fra toppen på 1 883 meter ser du en sjettedel av Norge en klar dag. Gå opp på rundt to timer, eller ta Gaustabanen gjennom fjellet.',
   },
@@ -90,12 +92,14 @@ const list: Stop[] = [
   {
     id: 'bryggen', name: 'Bryggen i Bergen', place: 'Bergen', type: 'Verdensarv', interest: 'historie', art: 'wharf',
     travelHint: '1 t 20 min fra Voss', rating: 4.7, reviewCount: 2100, openingHours: 'Hele døgnet', distanceFromRoute: '0 km', price: 'Gratis',
+    notFor: ['Bobil', 'Campingvogn'],
     location: [60.397, 5.324],
     description: 'Hanseatiske trehus fra tiden da Bergen var Nordens største handelsby. Gå inn i de smale smugene bak fasadene.',
   },
   {
     id: 'floyen', name: 'Fløyen', place: 'Bergen', type: 'Utsiktspunkt', interest: 'natur', art: 'mount',
     travelHint: '10 min fra Bryggen', rating: 4.8, reviewCount: 1800, openingHours: '07–23', distanceFromRoute: '800 m', price: 'Kr 180',
+    notFor: ['Bobil', 'Campingvogn'],
     location: [60.395, 5.343],
     description: 'Ta Fløibanen opp og se ut over byen, fjorden og øyene. Det går turstier videre innover fjellet.',
   },

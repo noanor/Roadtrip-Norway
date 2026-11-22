@@ -5,6 +5,7 @@ import { FullMapPage } from './pages/FullMapPage';
 import { HomePage } from './pages/HomePage';
 import { InterestsPage } from './pages/InterestsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { PricingPage } from './pages/PricingPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { RoutePage } from './pages/RoutePage';
@@ -27,6 +28,7 @@ export const routes: RouteObject[] = [
       { path: '/pris', element: <PricingPage /> },
       { path: '/innstillinger', element: <SettingsPage /> },
       { path: '/for-aktorer', element: <BusinessPage /> },
+      { path: '/varsler', element: <NotificationsPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

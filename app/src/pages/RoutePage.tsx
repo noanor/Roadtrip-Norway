@@ -15,10 +15,13 @@ import {
   dayStops,
   daySuggestions,
   dayTitle,
+  driveMinutes,
   matchesInterests,
+  MAX_DAYS,
   totalStops,
   tripDays,
   unmetInterests,
+  viaPlaces,
 } from '../domain/trip';
 import { formatDuration, sumLegs } from '../services/routing';
 
@@ -39,14 +42,16 @@ export function RoutePage() {
   // The trip total is the sum of the days as shown, so the numbers always add up.
   const real = map.drivingRoute;
   const numbers = plans.map((p) => {
-    if (!real) return { km: p.km, minutes: p.minutes };
+    if (!real) return { km: p.km, minutes: driveMinutes(state, p.minutes) };
     const [from, to] = dayRange(map.points, p.day, days);
     const sum = sumLegs(real, from, to);
-    return { km: Math.round(sum.km), minutes: sum.minutes };
+    return { km: Math.round(sum.km), minutes: driveMinutes(state, sum.minutes) };
   });
   const totalKm = numbers.reduce((n, d) => n + d.km, 0);
   const tripLabel = real ? `${totalKm} km kjørevei` : `ca. ${totalKm} km`;
   const tooLong = (d: number) => numbers[d - 1].minutes > state.maxDriveHours * 60;
+  const via = viaPlaces(state);
+  const canAddDay = state.flexible && days < Math.min(MAX_DAYS, route.days.length);
 
   const stops = dayStops(state, route, day);
   const allSuggestions = daySuggestions(state, route, day);
@@ -70,7 +75,8 @@ export function RoutePage() {
             {state.from} → {state.to}
           </h1>
           <div className="sub">
-            {days} {days > 1 ? 'dager' : 'dag'} · {tripLabel} · {totalStops(state, route)} stopp
+            {via.length > 0 && <>via {via.join(', ')} · </>}
+            {days} {days > 1 ? 'dager' : 'dag'} · {tripLabel} · {totalStops(state, route)} stopp · {state.vehicle}
           </div>
         </div>
         <button className="iconbtn light" aria-label={editing ? 'Ferdig med å endre' : 'Endre stopp'} aria-pressed={editing} onClick={() => setEditing((e) => !e)}>
@@ -119,8 +125,23 @@ export function RoutePage() {
         <div className="warnbox" role="note">
           <Icon name="warn" />
           <span>
-            Lang kjøredag: over {state.maxDriveHours} timer bak rattet. Legg til en dag eller fjern et stopp.{' '}
-            <button onClick={() => navigate('/innstillinger')}>Endre grensen</button>
+            Lang kjøredag: over {state.maxDriveHours} timer bak rattet{state.vehicle !== 'Bil' && state.vehicle !== 'MC' ? ` med ${state.vehicle.toLowerCase()}` : ''}.{' '}
+            {canAddDay ? (
+              <>
+                <button
+                  onClick={() => {
+                    dispatch({ type: 'changeDays', delta: 1 });
+                    toast(`Turen er nå ${days + 1} dager`);
+                  }}
+                >
+                  Legg til en dag
+                </button>{' '}
+                eller{' '}
+              </>
+            ) : (
+              'Fjern et stopp eller '
+            )}
+            <button onClick={() => navigate('/innstillinger')}>endre grensen</button>
           </span>
         </div>
       )}

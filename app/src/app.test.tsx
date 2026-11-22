@@ -39,6 +39,7 @@ describe('every page renders', () => {
     ['/pris', /Gratis for reisende/],
     ['/innstillinger', /Maks kjøring per dag/],
     ['/for-aktorer', /Bli oppdaget av bilturister langs veien/],
+    ['/varsler', /Varsler/],
   ];
   it.each(pages)('%s', (path, heading) => {
     renderAt(path);
@@ -155,7 +156,7 @@ describe('flows', () => {
   it('does not search with an empty destination', () => {
     const router = renderAt('/');
     fireEvent.change(screen.getByLabelText('Til'), { target: { value: '   ' } });
-    fireEvent.click(screen.getByRole('button', { name: /Finn ruter nå/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Neste: velg interesser/ }));
     expect(router.state.location.pathname).toBe('/');
     expect(screen.getByText('Fyll inn både fra og til')).toBeTruthy();
   });
@@ -182,5 +183,95 @@ describe('flows', () => {
     });
     vi.useRealTimers();
     expect(screen.getByText('Takk, vi har mottatt registreringen')).toBeTruthy();
+  });
+});
+
+describe('phase 1 features', () => {
+  it('does not search with a place it does not know', () => {
+    const router = renderAt('/');
+    fireEvent.change(screen.getByLabelText('Til'), { target: { value: 'Atlantis' } });
+    fireEvent.click(screen.getByRole('button', { name: /Neste: velg interesser/ }));
+    expect(router.state.location.pathname).toBe('/');
+    expect(screen.getByText(/Vi kjenner ikke igjen «Atlantis»/)).toBeTruthy();
+  });
+
+  it('shows via places and the vehicle on the route', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ via: ['Kongsberg', ''], vehicle: 'Bobil' }));
+    renderAt('/rute');
+    expect(screen.getByText(/via Kongsberg/)).toBeTruthy();
+    expect(screen.getByText(/· Bobil/)).toBeTruthy();
+  });
+
+  it('offers to add a day to a long day when the plan is flexible', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ days: 3, activeDay: 2, flexible: true }));
+    renderAt('/rute');
+    fireEvent.click(screen.getByRole('button', { name: 'Legg til en dag' }));
+    expect(screen.getAllByRole('tab')).toHaveLength(4);
+  });
+
+  it('does not offer an extra day when the number of days is locked', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ days: 3, activeDay: 2, flexible: false }));
+    renderAt('/rute');
+    expect(screen.getByText(/Lang kjøredag/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Legg til en dag' })).toBeNull();
+  });
+
+  it('a stop that does not suit the vehicle cannot be added', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ vehicle: 'Bobil' }));
+    renderAt('/stopp/floyen');
+    const cta = screen.getByRole('button', { name: /Passer ikke for bobil/ }) as HTMLButtonElement;
+    expect(cta.disabled).toBe(true);
+  });
+
+  it("the owner's answer arrives as a notification", async () => {
+    vi.useFakeTimers();
+    renderAt('/stopp/mjosey');
+    fireEvent.click(screen.getByRole('button', { name: 'Spørsmål til eieren?' }));
+    fireEvent.change(screen.getByPlaceholderText(/glutenfritt/), { target: { value: 'Har dere glutenfritt brød?' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send spørsmål' }));
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+    vi.useRealTimers();
+    expect(screen.getByText('Du spurte: Har dere glutenfritt brød?')).toBeTruthy();
+    cleanup();
+    renderAt('/');
+    expect(screen.getByRole('button', { name: 'Varsler, 1 nye' })).toBeTruthy();
+    cleanup();
+    renderAt('/varsler');
+    expect(screen.getByText('Mjøsey Bakeri har svart')).toBeTruthy();
+  });
+
+  it('signing in shows the name, signing out goes back to guest', () => {
+    renderAt('/profil');
+    fireEvent.click(screen.getByRole('button', { name: 'Logg inn' }));
+    fireEvent.change(screen.getByLabelText('Navn'), { target: { value: 'Kari Nordmann' } });
+    fireEvent.change(screen.getByLabelText('E-post'), { target: { value: 'kari@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Logg inn' }));
+    expect(screen.getByText('Kari Nordmann')).toBeTruthy();
+    expect(screen.getByText('KN')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Logg ut' }));
+    expect(screen.getByText('Gjest')).toBeTruthy();
+  });
+});
+
+describe('home page', () => {
+  it('keeps vehicle and day plan under «Flere valg», with their values in the summary', () => {
+    renderAt('/');
+    expect(screen.queryByRole('button', { name: 'Bobil' })).toBeNull();
+    expect(screen.getByText('Bil · kan legge til en dag')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Flere valg/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bobil' }));
+    expect(screen.getByText('Bobil · kan legge til en dag')).toBeTruthy();
+  });
+
+  it('a popular tour fills in the route and its days and goes to step 2', () => {
+    const router = renderAt('/');
+    fireEvent.click(screen.getByRole('button', { name: /Hardanger i frukttiden/ }));
+    expect(router.state.location.pathname).toBe('/interesser');
+    expect(screen.getByText(/Bergen → Odda/)).toBeTruthy();
+    cleanup();
+    renderAt('/');
+    expect(screen.getByText('3', { selector: 'output' })).toBeTruthy();
   });
 });

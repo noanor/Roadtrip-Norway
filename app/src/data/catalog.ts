@@ -21,6 +21,9 @@ export const INTERESTS: { id: InterestId; label: string; icon: IconName }[] = [
 
 export const VEHICLES: Vehicle[] = ['Bil', 'MC', 'Bobil', 'Campingvogn'];
 
+/** How much longer the same road takes. Motorhomes and caravans drive slower, mostly uphill and on narrow roads. */
+export const VEHICLE_SPEED_FACTOR: Record<Vehicle, number> = { Bil: 1, MC: 1, Bobil: 1.15, Campingvogn: 1.2 };
+
 /** The only fully planned route so far. Other from/to pairs reuse it until routes come from the backend. */
 export const OSLO_BERGEN: RouteTemplate = {
   id: 'oslo-bergen',
@@ -35,19 +38,12 @@ export const OSLO_BERGEN: RouteTemplate = {
   ],
 };
 
-export const POPULAR_ROUTES: [string, string][] = [
-  ['Oslo', 'Bergen'],
-  ['Bergen', 'Ålesund'],
-  ['Trondheim', 'Bodø'],
-  ['Stavanger', 'Kristiansand'],
-  ['Tromsø', 'Lofoten'],
-];
-
 export const EXPLORE_ROUTES: ExploreRoute[] = [
-  { title: 'Hardanger i frukttiden', subtitle: '3 dager · fjord, sider og fosser', art: 'falls', from: 'Bergen', to: 'Odda' },
-  { title: 'Telemarkskanalen', subtitle: '2 dager · sluser og stavkirker', art: 'church', from: 'Skien', to: 'Dalen' },
-  { title: 'Atlanterhavsveien', subtitle: '1 dag · kyst og broer', art: 'lake', from: 'Molde', to: 'Kristiansund' },
-  { title: 'Gamle Strynefjellsvei', subtitle: '2 dager · snø om sommeren', art: 'mount', from: 'Lom', to: 'Stryn' },
+  { title: 'Oslo til Bergen over fjellet', subtitle: '5 dager · stavkirker, fjell og fjord', art: 'mount', from: 'Oslo', to: 'Bergen', days: 5 },
+  { title: 'Hardanger i frukttiden', subtitle: '3 dager · fjord, sider og fosser', art: 'falls', from: 'Bergen', to: 'Odda', days: 3 },
+  { title: 'Telemarkskanalen', subtitle: '2 dager · sluser og stavkirker', art: 'church', from: 'Skien', to: 'Dalen', days: 2 },
+  { title: 'Atlanterhavsveien', subtitle: '1 dag · kyst og broer', art: 'lake', from: 'Molde', to: 'Kristiansund', days: 1 },
+  { title: 'Gamle Strynefjellsvei', subtitle: '2 dager · snø om sommeren', art: 'mount', from: 'Lom', to: 'Stryn', days: 2 },
 ];
 
 /** Known place coordinates. Replace with a geocoding service when free-text places are supported. */
@@ -58,6 +54,14 @@ export const CITIES: Record<string, LatLng> = {
   Kristiansund: [63.11, 7.728], Lom: [61.838, 8.567], Stryn: [61.904, 6.716], Odda: [60.069, 6.546],
   Jevnaker: [60.24, 10.38], Frogn: [59.66, 10.63], Kongsberg: [59.668, 9.65],
 };
+
+/** Place names the planner knows, for the suggestions under Fra, Til and Via. */
+export const PLACE_NAMES = Object.keys(CITIES).sort((a, b) => a.localeCompare(b, 'nb'));
+
+/** The known place with this name (any case, surrounding spaces ignored), or undefined. */
+export function knownPlace(name: string): string | undefined {
+  return PLACE_NAMES.find((c) => c.toLowerCase() === name.trim().toLowerCase());
+}
 
 export function cityLocation(name: string, fallback: 'from' | 'to'): LatLng {
   const key = Object.keys(CITIES).find((c) => c.toLowerCase() === name.trim().toLowerCase());
