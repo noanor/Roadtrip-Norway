@@ -3,6 +3,7 @@ import { OSLO_BERGEN } from '../data/routes';
 import {
   dayRange,
   planOf,
+  saveStatus,
   dayStops,
   daySuggestions,
   driveMinutes,
@@ -185,5 +186,20 @@ describe('ads', () => {
   it('a paid placement the traveller adds is on the route', () => {
     const s = tripReducer(initialTripState, { type: 'addStop', stopId: 'voss', day: 5 });
     expect(dayStops(s, route, 5)).toContain('voss');
+  });
+});
+
+describe('saveStatus', () => {
+  it('is unsaved, then saved, then changed when the trip changes, and saved again', () => {
+    let s: TripState = initialTripState;
+    expect(saveStatus(s)).toBe('unsaved');
+    s = tripReducer(s, { type: 'saveTrip', id: 't1', savedAt: '2026-11-22T10:00:00.000Z' });
+    expect(saveStatus(s)).toBe('saved');
+    s = tripReducer(s, { type: 'setActiveDay', day: 3 });
+    expect(saveStatus(s)).toBe('saved'); // looking at another day changes nothing
+    s = tripReducer(s, { type: 'removeStop', stopId: 'heddal' });
+    expect(saveStatus(s)).toBe('changed');
+    s = tripReducer(s, { type: 'saveTrip', id: 't2', savedAt: '2026-11-22T11:00:00.000Z' });
+    expect(saveStatus(s)).toBe('saved');
   });
 });

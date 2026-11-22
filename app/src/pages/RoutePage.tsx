@@ -18,6 +18,7 @@ import {
   driveMinutes,
   matchesInterests,
   MAX_DAYS,
+  saveStatus,
   totalStops,
   tripDays,
   unmetInterests,
@@ -69,6 +70,7 @@ function RouteView({ route }: { route: RouteTemplate }) {
   const unmet = unmetInterests(state, route).map((id) => INTERESTS.find((i) => i.id === id)?.label ?? id);
 
   const withDays = state.flexible;
+  const status = saveStatus(state);
 
   const remove = (id: string) => {
     dispatch({ type: 'removeStop', stopId: id });
@@ -252,16 +254,27 @@ function RouteView({ route }: { route: RouteTemplate }) {
 
       {/* floats at the bottom of the screen, so saving never needs scrolling */}
       <div className="sticky-foot">
-        <button
-          className="cta"
-          onClick={() => {
-            const update = state.currentTripId !== null;
-            dispatch({ type: 'saveTrip', id: `trip_${Date.now()}`, savedAt: new Date().toISOString() });
-            toast(update ? 'Den lagrede ruten er oppdatert' : 'Ruten er lagret under Ruter');
-          }}
-        >
-          {state.currentTripId ? 'Lagre endringene' : 'Lagre ruten'} <Icon name="check" />
-        </button>
+        {status === 'saved' ? (
+          // saved and unchanged: say so on the button itself, and lead to where it is kept
+          <button key="saved" className="cta saved" onClick={() => navigate('/ruter')}>
+            <Icon name="check" />
+            <span>
+              Ruten er lagret
+              <small>Se den under Ruter</small>
+            </span>
+          </button>
+        ) : (
+          <button
+            key="save"
+            className="cta"
+            onClick={() => {
+              dispatch({ type: 'saveTrip', id: `trip_${Date.now()}`, savedAt: new Date().toISOString() });
+              toast(status === 'changed' ? 'Endringene er lagret' : 'Ruten er lagret under Ruter');
+            }}
+          >
+            {status === 'changed' ? 'Lagre endringene' : 'Lagre ruten'} <Icon name="check" />
+          </button>
+        )}
       </div>
     </>
   );
