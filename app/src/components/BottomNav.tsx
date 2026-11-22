@@ -5,10 +5,13 @@ const ITEMS: { to: string; label: string; icon: IconName; /** Other pages that b
   { to: '/', label: 'Hjem', icon: 'home' },
   { to: '/ruter', label: 'Ruter', icon: 'route', also: ['/rute'] },
   { to: '/lagret', label: 'Lagret', icon: 'bookmark' },
-  { to: '/profil', label: 'Profil', icon: 'user' },
+  { to: '/profil', label: 'Profil', icon: 'user', also: ['/innstillinger'] },
 ];
 
-export const NAV_PATHS = new Set(ITEMS.flatMap((i) => [i.to, ...(i.also ?? [])]));
+const NAV_PATHS = new Set(ITEMS.flatMap((i) => [i.to, ...(i.also ?? [])]));
+
+/** Pages that show the bottom menu: the tabs, the pages under them, and a stop's page. */
+export const showsNav = (pathname: string) => NAV_PATHS.has(pathname) || pathname.startsWith('/stopp/');
 
 export function BottomNav() {
   const { pathname } = useLocation();

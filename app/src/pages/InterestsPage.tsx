@@ -49,7 +49,7 @@ export function InterestsPage() {
           disabled={count === 0}
           onClick={() => {
             dispatch({ type: 'setActiveDay', day: 1 });
-            navigate('/rute');
+            navigate('/rute', { state: { step: 3 } });
           }}
         >
           Vis forslag til rute ({count} valgt) <Icon name="arrow" />

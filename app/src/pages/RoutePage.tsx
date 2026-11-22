@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { useBack } from '../hooks/useBack';
 import { TripMap } from '../components/map/TripMap';
@@ -37,7 +37,8 @@ function RouteView({ route }: { route: RouteTemplate }) {
   const navigate = useNavigate();
   const back = useBack('/');
   const toast = useToast();
-  const [editing, setEditing] = useState(false);
+  // arriving from the interests step: the last step of planning
+  const lastStep = (useLocation().state as { step?: number } | null)?.step === 3;
   const [onlyServing, setOnlyServing] = useState(false);
   const days = dayCount(state, route);
   const plans = tripDays(state, route);
@@ -81,6 +82,7 @@ function RouteView({ route }: { route: RouteTemplate }) {
           <Icon name="back" />
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
+          {lastStep && <span className="step">Steg 3 av 3</span>}
           <h1 className="display">
             {route.from} → {route.to}
           </h1>
@@ -89,8 +91,8 @@ function RouteView({ route }: { route: RouteTemplate }) {
             {withDays ? `${days} ${days > 1 ? 'dager' : 'dag'}` : 'Uten dagsplan'} · {tripLabel} · {totalStops(state, route)} stopp · {state.vehicle}
           </div>
         </div>
-        <button className="iconbtn light" aria-label={editing ? 'Ferdig med å endre' : 'Endre stopp'} aria-pressed={editing} onClick={() => setEditing((e) => !e)}>
-          <Icon name={editing ? 'check' : 'edit'} />
+        <button className="iconbtn light" aria-label={withDays ? 'Endre fra, til og dager' : 'Endre fra og til'} onClick={() => navigate('/')}>
+          <Icon name="edit" />
         </button>
       </div>
 
@@ -130,12 +132,20 @@ function RouteView({ route }: { route: RouteTemplate }) {
         ))}
       </div>
       <div className="dayinfo">
-        Dag {day} · {dayTitle(plan)} · {numbers[day - 1].km} km · {formatDuration(numbers[day - 1].minutes)} kjøring
+        <b>
+          Dag {day} · {dayTitle(plan)}
+        </b>
+        <span>
+          {numbers[day - 1].km} km · {formatDuration(numbers[day - 1].minutes)} kjøring
+        </span>
       </div>
         </>
       ) : (
         <div className="dayinfo" style={{ paddingTop: 12 }}>
-          Hele turen · {numbers[0].km} km · {formatDuration(numbers[0].minutes)} kjøring
+          <b>Hele turen</b>
+          <span>
+            {numbers[0].km} km · {formatDuration(numbers[0].minutes)} kjøring
+          </span>
         </div>
       )}
 
@@ -164,13 +174,6 @@ function RouteView({ route }: { route: RouteTemplate }) {
         </div>
       )}
 
-      {editing && (
-        <div className="editbar">
-          <span>Trykk på krysset for å fjerne et stopp.</span>
-          <button onClick={() => navigate('/')}>{withDays ? 'Endre fra, til og dager' : 'Endre fra og til'}</button>
-        </div>
-      )}
-
       {route.auto && (
         <p className="note">
           {allSuggestions.length + stops.length === 0
@@ -196,7 +199,7 @@ function RouteView({ route }: { route: RouteTemplate }) {
             number={i + 1}
             from="route"
             highlight={state.lastAdded === id}
-            onRemove={editing ? () => remove(id) : undefined}
+            onRemove={() => remove(id)}
             badge={
               state.added.includes(id)
                 ? { text: 'Lagt til av deg', tone: 'g' }

@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { useBack } from '../hooks/useBack';
 import { StopMap } from '../components/map/StopMap';
@@ -18,7 +18,6 @@ export function StopDetailPage() {
   const { state, dispatch, route } = useTrip();
   const navigate = useNavigate();
   const back = useBack('/rute');
-  const location = useLocation();
   const toast = useToast();
   const [reviews, setReviews] = useState<Review[] | null>(null);
   const [question, setQuestion] = useState<'idle' | 'writing' | 'sending' | 'sent'>('idle');
@@ -51,7 +50,6 @@ export function StopDetailPage() {
   const trip = day === null ? (findRoute('Oslo', stop.place) ?? routeWithStop(stop.id)) : undefined;
   const isDayTrip = trip?.from === 'Oslo' && trip.days.length === 1;
   const saved = state.saved.includes(stop.id);
-  const cameFromRoute = (location.state as { from?: string } | null)?.from === 'route';
   const fits = suitsVehicle(state, stop.id);
   const answers = state.notifications.filter((n) => n.stopId === stop.id);
   const waiting = question === 'sent' && !answers.some((n) => n.question === questionText);
@@ -64,10 +62,8 @@ export function StopDetailPage() {
   const addToRoute = () => {
     if (day === null) return;
     dispatch({ type: 'addStop', stopId: stop.id, day });
+    // stay on the page: the traveller may want to read on, save or ask the owner
     toast(`${stop.name} er lagt til ${state.flexible ? `dag ${day}` : 'i ruten'}`);
-    // Figma flow: Stoppdetaljer → Rute & Kart 2
-    if (cameFromRoute) navigate(-1);
-    else navigate('/rute');
   };
 
   const removeFromRoute = () => {
@@ -98,9 +94,6 @@ export function StopDetailPage() {
         <div className="tools">
           <button className="iconbtn light" aria-label="Tilbake" onClick={back}>
             <Icon name="back" />
-          </button>
-          <button className="iconbtn light" aria-label={saved ? 'Fjern fra lagret' : 'Lagre'} onClick={toggleSaved}>
-            <Icon name="bookmark" />
           </button>
         </div>
       </div>
@@ -143,30 +136,18 @@ export function StopDetailPage() {
               </button>
             )
           ) : added ? (
-            <button
-              className="cta green"
-              onClick={() => {
-                dispatch({ type: 'setActiveDay', day });
-                navigate('/rute');
-              }}
-            >
-              <Icon name="check" /> Lagt til i ruten
+            <button className="cta outline" onClick={removeFromRoute}>
+              <Icon name="close" /> Fjern fra ruten
             </button>
           ) : (
             <button className="cta green" onClick={addToRoute}>
-              <Icon name="plus" /> Legg til rute
+              <Icon name="plus" /> Legg til i ruten
             </button>
           )}
           <button className={`sq ${saved ? 'on' : ''}`} aria-label={saved ? 'Fjern fra lagret' : 'Lagre'} aria-pressed={saved} onClick={toggleSaved}>
             <Icon name="bookmark" />
           </button>
         </div>
-
-        {added && (
-          <button className="btn-outline" onClick={removeFromRoute}>
-            <Icon name="close" /> Fjern fra ruten
-          </button>
-        )}
 
         <p className="d-desc">{stop.description}</p>
         <StopMap stop={stop} />
@@ -246,11 +227,6 @@ export function StopDetailPage() {
           )}
         </div>
 
-        <button className="owner-link" onClick={() => navigate('/for-aktorer')}>
-          <Icon name="store" />
-          <span>Driver du et sted langs veien? Bli synlig for bilturister.</span>
-          <Icon name="chev" />
-        </button>
       </div>
     </>
   );

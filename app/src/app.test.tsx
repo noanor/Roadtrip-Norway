@@ -83,18 +83,28 @@ describe('data saved in the browser', () => {
 });
 
 describe('flows', () => {
-  it('adding a suggested stop from its page puts it on the route (Figma flow 1)', async () => {
+  it('a stop is added and removed from its own page, which stays open', () => {
     const router = renderAt('/stopp/mjosey');
-    fireEvent.click(screen.getByRole('button', { name: /Legg til rute/ }));
-    expect(router.state.location.pathname).toBe('/rute');
-    expect(await screen.findByText('Lagt til av deg')).toBeTruthy();
-    expect(screen.queryByText('Forslag langs veien')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Legg til i ruten/ }));
+    expect(router.state.location.pathname).toBe('/stopp/mjosey');
+    expect(screen.getByText('Mjøsey Bakeri er lagt til dag 1')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Fjern fra ruten/ }));
+    expect(screen.getByRole('button', { name: /Legg til i ruten/ })).toBeTruthy();
+    // one main button and one save button
+    expect(screen.getAllByRole('button', { name: /Lagre|Fjern fra lagret/ })).toHaveLength(1);
+    expect(screen.queryByText(/Driver du et sted langs veien/)).toBeNull();
   });
 
-  it('a stop can be removed from the route in edit mode', () => {
+  it('the stop page and settings show the bottom menu', () => {
+    renderAt('/stopp/mjosey');
+    expect(screen.getByRole('navigation', { name: 'Hovedmeny' })).toBeTruthy();
+    cleanup();
+    renderAt('/innstillinger');
+    expect(screen.getByRole('link', { name: 'Profil' }).className).toBe('on');
+  });
+
+  it('a stop is removed from the route with one tap', () => {
     renderAt('/rute');
-    expect(screen.queryByRole('button', { name: /Fjern Heddal stavkirke/ })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Endre stopp' }));
     fireEvent.click(screen.getByRole('button', { name: /Fjern Heddal stavkirke/ }));
     expect(screen.getByText('Heddal stavkirke er fjernet fra dag 1')).toBeTruthy();
     // it is offered again as a suggestion
@@ -215,7 +225,7 @@ describe('phase 1 features', () => {
     renderAt('/rute');
     expect(screen.queryAllByRole('tab')).toHaveLength(0);
     expect(screen.getByText(/Uten dagsplan/)).toBeTruthy();
-    expect(screen.getByText(/Hele turen ·/)).toBeTruthy();
+    expect(screen.getByText('Hele turen')).toBeTruthy();
     expect(screen.queryByText(/Lang kjøredag/)).toBeNull();
     expect(screen.getByText(/Ingen stopp valgt ennå/)).toBeTruthy();
     // stops from the whole trip are offered, not only the first day's
@@ -388,5 +398,22 @@ describe('phase 3: saved trips', () => {
   it('the Ruter tab is highlighted on the route page too', () => {
     renderAt('/rute');
     expect(screen.getByRole('link', { name: 'Ruter' }).className).toBe('on');
+  });
+});
+
+describe('phase 5: progress through the three steps', () => {
+  it('shows step 1, 2 and 3 of 3 on the way to the route', () => {
+    renderAt('/');
+    expect(screen.getByText('Steg 1 av 3')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Neste: velg interesser/ }));
+    expect(screen.getByText('Steg 2 av 3')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Museer & historie/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Vis forslag til rute/ }));
+    expect(screen.getByText('Steg 3 av 3')).toBeTruthy();
+  });
+
+  it('a route opened another way is not a step', () => {
+    renderAt('/rute');
+    expect(screen.queryByText('Steg 3 av 3')).toBeNull();
   });
 });
