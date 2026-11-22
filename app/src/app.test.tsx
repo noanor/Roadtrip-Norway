@@ -417,3 +417,20 @@ describe('phase 5: progress through the three steps', () => {
     expect(screen.queryByText('Steg 3 av 3')).toBeNull();
   });
 });
+
+describe('ads in the prototype', () => {
+  it('ads are marked on the route, in suggestions and when added', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ activeDay: 5, added: ['voss'] }));
+    renderAt('/rute');
+    expect(screen.getAllByText('Annonse').length).toBeGreaterThan(0);
+    const item = screen.getByText('Rafting på Voss').closest('.item')!;
+    expect(item.textContent).toContain('Annonse');
+  });
+
+  it('every hand-picked trip with ads shows them as suggestions', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ from: 'Skien', to: 'Dalen', days: 2 }));
+    renderAt('/rute');
+    expect(screen.getByText('Kanalbakeriet')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Legg Kanalbakeriet til i ruten' })).toBeTruthy();
+  });
+});

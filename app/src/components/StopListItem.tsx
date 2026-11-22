@@ -30,7 +30,10 @@ export function StopListItem({ stop, number, badge, highlight, from, onRemove }:
           {stop.type} · {stop.place}
           {stop.serving && ' · Servering'}
         </small>
-        {badge && <span className={`badge ${badge.tone}`}>{badge.text}</span>}
+        <span className="badges">
+          {stop.sponsored && <span className="badge ad">Annonse</span>}
+          {badge && <span className={`badge ${badge.tone}`}>{badge.text}</span>}
+        </span>
       </span>
     </>
   );

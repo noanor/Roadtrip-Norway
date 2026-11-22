@@ -341,10 +341,11 @@ function isIncluded(state: TripState, plan: DayPlan, stopId: string): boolean {
   if (state.removed.includes(stopId)) return false;
   // «Ferdig dagsplan» off: the traveller picks every stop from the suggestions
   if (!state.flexible) return false;
+  // paid placements are never put on the route for the traveller, only suggested (as the pricing page promises)
+  if (STOPS[stopId].sponsored) return false;
   // nothing chosen yet: show the standard route
   if (state.interests.length === 0) return plan.stops.includes(stopId);
-  // paid placements are never put on the route for the traveller, only suggested
-  return matchesInterests(state, stopId) && !STOPS[stopId].sponsored;
+  return matchesInterests(state, stopId);
 }
 
 /** Rough distance between two points. Only used to compare detours, so flat maths is good enough. */

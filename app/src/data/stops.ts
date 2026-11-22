@@ -1,6 +1,8 @@
 import type { Stop } from '../types';
 
-// Seed catalogue copied from the prototype. Mjøsey Bakeri and Rauland Gardsmat are fictional.
+// Seed catalogue copied from the prototype. Mjøsey Bakeri, Rauland Gardsmat, Kaikafeen and Kanalbakeriet are
+// fictional. Only fictional or generic places are marked as ads (`sponsored`), so the prototype never
+// claims that a real business pays for a placement.
 // Ratings, review counts, opening hours and prices are placeholders for the prototype, not checked facts.
 // Replace with data from the backend once it exists (see services/api.ts).
 const list: Stop[] = [
@@ -44,7 +46,7 @@ const list: Stop[] = [
   },
   {
     id: 'rauland', name: 'Rauland Gardsmat', place: 'Rauland', type: 'Gårdsbutikk', interest: 'mat', art: 'cabin',
-    travelHint: '10 min avstikker', rating: 4.6, reviewCount: 54, openingHours: '10–18', distanceFromRoute: '900 m', price: 'Kr', serving: true,
+    travelHint: '10 min avstikker', rating: 4.6, reviewCount: 54, openingHours: '10–18', distanceFromRoute: '900 m', price: 'Kr', serving: true, sponsored: true,
     location: [59.7, 8.04],
     description: 'Gårdsbutikk med spekemat, rømme og flatbrød fra egne dyr. Stopp for en kopp kaffe ved vinduet mot Totak.',
   },
@@ -86,7 +88,7 @@ const list: Stop[] = [
   },
   {
     id: 'voss', name: 'Rafting på Voss', place: 'Voss', type: 'Aktivitet', interest: 'aktiv', art: 'lake',
-    travelHint: '1 t 30 min fra Eidfjord', rating: 4.8, reviewCount: 320, openingHours: '09–17', distanceFromRoute: '2 km', price: 'Kr Kr Kr',
+    travelHint: '1 t 30 min fra Eidfjord', rating: 4.8, reviewCount: 320, openingHours: '09–17', distanceFromRoute: '2 km', price: 'Kr Kr Kr', sponsored: true,
     location: [60.628, 6.417],
     description: 'Tre timer i elva med guide. Passer fra 12 år, og alt utstyr er inkludert.',
   },
@@ -153,7 +155,19 @@ const list: Stop[] = [
     location: [60.118, 6.56],
     description: 'Kraftstasjonen som ga strøm til industrien i Odda. Turbinhallen fra 1908 er et av de flotteste industribyggene i Norge.',
   },
+  {
+    id: 'kaikafe', name: 'Kaikafeen', place: 'Norheimsund', type: 'Kafé', interest: 'mat', art: 'harbor',
+    travelHint: '5 min avstikker', rating: 4.5, reviewCount: 88, openingHours: '09–18', distanceFromRoute: '300 m', price: 'Kr', serving: true, sponsored: true,
+    location: [60.371, 6.146],
+    description: 'Kafé på kaia med fiskesuppe, vafler og utsikt over Hardangerfjorden. Bord ute når været tillater det.',
+  },
   // ---- Telemarkskanalen (Skien → Dalen) ----
+  {
+    id: 'kanalbakeriet', name: 'Kanalbakeriet', place: 'Lunde', type: 'Bakeri & kafé', interest: 'mat', art: 'cabin',
+    travelHint: 'Ved slusene', rating: 4.6, reviewCount: 64, openingHours: '08–17', distanceFromRoute: '200 m', price: 'Kr', serving: true, sponsored: true,
+    location: [59.299, 9.105],
+    description: 'Lite bakeri ved kanalen med skillingsboller og kaffe. Se kanalbåten gå forbi fra benkene ute.',
+  },
   {
     id: 'ibsen', name: 'Henrik Ibsen-museet', place: 'Skien', type: 'Museum', interest: 'historie', art: 'museum',
     travelHint: '10 min fra Skien sentrum', rating: 4.4, reviewCount: 210, openingHours: '11–17', distanceFromRoute: '3 km', price: 'Kr 150',

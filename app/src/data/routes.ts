@@ -26,7 +26,7 @@ const HARDANGER: RouteTemplate = {
   fromLocation: [60.392, 5.324],
   toLocation: [60.069, 6.546],
   days: [
-    { day: 1, from: 'Bergen', to: 'Norheimsund', toLocation: [60.371, 6.146], km: 75, minutes: 80, stops: ['steinsdal'], suggestions: ['fartoyvern'] },
+    { day: 1, from: 'Bergen', to: 'Norheimsund', toLocation: [60.371, 6.146], km: 75, minutes: 80, stops: ['steinsdal'], suggestions: ['fartoyvern', 'kaikafe'] },
     { day: 2, from: 'Norheimsund', to: 'Lofthus', toLocation: [60.326, 6.664], km: 95, minutes: 110, stops: ['folkemuseum', 'sider'], suggestions: ['husedalen'] },
     { day: 3, from: 'Lofthus', to: 'Odda', toLocation: [60.069, 6.546], km: 40, minutes: 45, stops: ['vasskraft'], suggestions: ['late'] },
   ],
@@ -39,7 +39,7 @@ const TELEMARKSKANALEN: RouteTemplate = {
   fromLocation: [59.209, 9.609],
   toLocation: [59.445, 8.004],
   days: [
-    { day: 1, from: 'Skien', to: 'Lunde', toLocation: [59.296, 9.098], km: 70, minutes: 75, stops: ['ibsen', 'ulefoss'], suggestions: ['vrangfoss'] },
+    { day: 1, from: 'Skien', to: 'Lunde', toLocation: [59.296, 9.098], km: 70, minutes: 75, stops: ['ibsen', 'ulefoss'], suggestions: ['vrangfoss', 'kanalbakeriet'] },
     { day: 2, from: 'Lunde', to: 'Dalen', toLocation: [59.445, 8.004], km: 85, minutes: 95, stops: ['eidsborg', 'dalenhotel'], suggestions: ['kviteseid'] },
   ],
 };

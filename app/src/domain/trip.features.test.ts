@@ -175,3 +175,15 @@ describe('without a day plan', () => {
     expect(tripDays(s, route)).toHaveLength(3);
   });
 });
+
+describe('ads', () => {
+  it('a paid placement is only suggested, also before any interests are chosen', () => {
+    expect(dayStops(initialTripState, route, 5)).not.toContain('voss');
+    expect(daySuggestions(initialTripState, route, 5)).toContain('voss');
+  });
+
+  it('a paid placement the traveller adds is on the route', () => {
+    const s = tripReducer(initialTripState, { type: 'addStop', stopId: 'voss', day: 5 });
+    expect(dayStops(s, route, 5)).toContain('voss');
+  });
+});
