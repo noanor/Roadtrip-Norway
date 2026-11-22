@@ -24,9 +24,16 @@ import {
   viaPlaces,
 } from '../domain/trip';
 import { formatDuration, sumLegs } from '../services/routing';
+import { NoRoute } from '../components/NoRoute';
+import type { RouteTemplate } from '../types';
 
 export function RoutePage() {
-  const { state, dispatch, route } = useTrip();
+  const { route } = useTrip();
+  return route ? <RouteView route={route} /> : <NoRoute />;
+}
+
+function RouteView({ route }: { route: RouteTemplate }) {
+  const { state, dispatch } = useTrip();
   const navigate = useNavigate();
   const back = useBack('/');
   const toast = useToast();
@@ -36,7 +43,7 @@ export function RoutePage() {
   const plans = tripDays(state, route);
   const day = Math.min(state.activeDay, days);
   const plan = plans[day - 1];
-  const map = useTripMap(day);
+  const map = useTripMap(route, day);
 
   // Real driving numbers once the routing service has answered, the planned ones until then.
   // The trip total is the sum of the days as shown, so the numbers always add up.
@@ -72,7 +79,7 @@ export function RoutePage() {
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1 className="display">
-            {state.from} → {state.to}
+            {route.from} → {route.to}
           </h1>
           <div className="sub">
             {via.length > 0 && <>via {via.join(', ')} · </>}

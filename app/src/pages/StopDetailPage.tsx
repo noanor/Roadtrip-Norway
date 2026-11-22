@@ -6,6 +6,7 @@ import { StopMap } from '../components/map/StopMap';
 import { StopArt } from '../components/StopArt';
 import { useToast } from '../context/ToastContext';
 import { useTrip } from '../context/TripContext';
+import { findRoute, routeWithStop } from '../data/routes';
 import { getStop, priceLabel } from '../data/stops';
 import { dayOfStop, isOnRoute, suitsVehicle } from '../domain/trip';
 import { askOwner, getReviews, waitForOwnerAnswer } from '../services/api';
@@ -43,9 +44,12 @@ export function StopDetailPage() {
     );
   }
 
-  const day = dayOfStop(state, route, stop.id);
+  const day = route ? dayOfStop(state, route, stop.id) : null;
   const price = priceLabel(stop);
-  const added = isOnRoute(state, route, stop.id);
+  const added = route ? isOnRoute(state, route, stop.id) : false;
+  // Not along the current trip: offer a day trip from Oslo, or the planned trip that passes it.
+  const trip = day === null ? (findRoute('Oslo', stop.place) ?? routeWithStop(stop.id)) : undefined;
+  const isDayTrip = trip?.from === 'Oslo' && trip.days.length === 1;
   const saved = state.saved.includes(stop.id);
   const cameFromRoute = (location.state as { from?: string } | null)?.from === 'route';
   const fits = suitsVehicle(state, stop.id);
@@ -126,16 +130,18 @@ export function StopDetailPage() {
               <Icon name="warn" /> Passer ikke for {state.vehicle.toLowerCase()}
             </button>
           ) : day === null ? (
-            <button
-              className="cta green"
-              onClick={() => {
-                dispatch({ type: 'setRoute', from: 'Oslo', to: stop.place });
-                toast(`Dagstur til ${stop.place} er klar til planlegging`);
-                navigate('/');
-              }}
-            >
-              <Icon name="route" /> Planlegg dagstur hit
-            </button>
+            trip && (
+              <button
+                className="cta green"
+                onClick={() => {
+                  dispatch({ type: 'setRoute', from: trip.from, to: trip.to });
+                  dispatch({ type: 'setDays', days: trip.days.length });
+                  navigate('/interesser');
+                }}
+              >
+                <Icon name="route" /> {isDayTrip ? 'Planlegg dagstur hit' : `Planlegg ${trip.from} → ${trip.to}`}
+              </button>
+            )
           ) : added ? (
             <button
               className="cta green"

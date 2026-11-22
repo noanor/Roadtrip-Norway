@@ -71,6 +71,8 @@ export interface RouteTemplate {
   id: string;
   from: string;
   to: string;
+  fromLocation: LatLng;
+  toLocation: LatLng;
   days: DayPlan[];
 }
 

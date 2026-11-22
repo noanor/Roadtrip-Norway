@@ -4,7 +4,7 @@ import { Icon } from '../components/Icon';
 import { StopArt } from '../components/StopArt';
 import { useToast } from '../context/ToastContext';
 import { useTrip } from '../context/TripContext';
-import { EXPLORE_ROUTES, PLACE_NAMES, VEHICLES } from '../data/catalog';
+import { EXPLORE_ROUTES, knownPlace, PLACE_NAMES, VEHICLES } from '../data/catalog';
 import { DAY_TRIP_IDS, STOPS } from '../data/stops';
 import { MAX_DAYS, MIN_DAYS, unknownPlaces, unreadCount } from '../domain/trip';
 import logo from '../assets/logo.png';
@@ -13,11 +13,13 @@ import wordmark from '../assets/wordmark.png';
 // One task per screen: the planner asks only where and how long. Vehicle and day plan are
 // tucked under «Flere valg» with their current values in the summary, so nothing is hidden.
 export function HomePage() {
-  const { state, dispatch } = useTrip();
+  const { state, dispatch, route } = useTrip();
   const navigate = useNavigate();
   const toast = useToast();
   const unread = unreadCount(state);
   const [moreOpen, setMoreOpen] = useState(false);
+  const bothKnown = !!knownPlace(state.from) && !!knownPlace(state.to);
+  const noTrip = bothKnown && !route;
 
   const next = () => {
     if (!state.from.trim() || !state.to.trim()) {
@@ -29,6 +31,12 @@ export function HomePage() {
       toast(`Vi kjenner ikke igjen «${unknown[0]}». Velg et sted fra listen.`);
       return;
     }
+    if (!route) {
+      toast('Vi har ingen ferdig tur mellom disse stedene ennå');
+      return;
+    }
+    // the names as the trip spells them, so headings read «Oslo», not «oslo »
+    dispatch({ type: 'setRoute', from: route.from, to: route.to });
     navigate('/interesser');
   };
 
@@ -88,6 +96,11 @@ export function HomePage() {
             <input id="to" list="places" autoComplete="off" value={state.to} onChange={(e) => dispatch({ type: 'setTo', value: e.target.value })} aria-label="Til" />
           </label>
         </div>
+        {noTrip && (
+          <p className="note-inline" role="status">
+            Vi har ingen ferdig tur fra {knownPlace(state.from)} til {knownPlace(state.to)} ennå. Velg en av de populære turene under.
+          </p>
+        )}
         <datalist id="places">
           {PLACE_NAMES.map((p) => (
             <option key={p} value={p} />

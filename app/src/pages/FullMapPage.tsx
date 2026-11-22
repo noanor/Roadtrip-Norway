@@ -6,17 +6,23 @@ import { useTripMap } from '../components/map/useTripMap';
 import { useToast } from '../context/ToastContext';
 import { useTrip } from '../context/TripContext';
 import { dayCount, dayPlan, dayTitle, totalStops } from '../domain/trip';
-import type { LatLng } from '../types';
+import { NoRoute } from '../components/NoRoute';
+import type { LatLng, RouteTemplate } from '../types';
 
 export function FullMapPage() {
-  const { state, dispatch, route } = useTrip();
+  const { route } = useTrip();
+  return route ? <FullMapView route={route} /> : <NoRoute />;
+}
+
+function FullMapView({ route }: { route: RouteTemplate }) {
+  const { state, dispatch } = useTrip();
   const back = useBack('/rute');
   const toast = useToast();
   /** null = whole trip */
   const [day, setDay] = useState<number | null>(state.activeDay);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [userPosition, setUserPosition] = useState<LatLng | null>(null);
-  const map = useTripMap(day, showSuggestions);
+  const map = useTripMap(route, day, showSuggestions);
   const days = dayCount(state, route);
   const plan = day !== null ? dayPlan(state, route, day) : undefined;
 
@@ -61,7 +67,7 @@ export function FullMapPage() {
         </button>
         <div className="map-title">
           <b>
-            {state.from} → {state.to}
+            {route.from} → {route.to}
           </b>
           <small>{day !== null && plan ? `Dag ${day} · ${dayTitle(plan)}` : `Hele turen · ${totalStops(state, route)} stopp`}</small>
         </div>

@@ -1,14 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, type Dispatch, type ReactNode } from 'react';
 import { config } from '../config';
-import { OSLO_BERGEN } from '../data/catalog';
+import { findRoute } from '../data/routes';
 import { initialTripState, restoreTripState, tripReducer, type TripAction, type TripState } from '../domain/trip';
 import type { RouteTemplate } from '../types';
 
 interface TripContextValue {
   state: TripState;
   dispatch: Dispatch<TripAction>;
-  /** Planned route for the current from/to. Only Oslo → Bergen exists so far. */
-  route: RouteTemplate;
+  /** Planned trip for the current from/to, or null when none is planned between those places yet. */
+  route: RouteTemplate | null;
 }
 
 const TripContext = createContext<TripContextValue | null>(null);
@@ -34,7 +34,8 @@ export function TripProvider({ children }: { children: ReactNode }) {
     }
   }, [state]);
 
-  const value = useMemo(() => ({ state, dispatch, route: OSLO_BERGEN }), [state]);
+  const route = useMemo(() => findRoute(state.from, state.to), [state.from, state.to]);
+  const value = useMemo(() => ({ state, dispatch, route }), [state, route]);
   return <TripContext.Provider value={value}>{children}</TripContext.Provider>;
 }
 

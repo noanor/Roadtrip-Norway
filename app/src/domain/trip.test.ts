@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OSLO_BERGEN } from '../data/catalog';
+import { OSLO_BERGEN } from '../data/routes';
 import {
   dayCount,
   dayRange,

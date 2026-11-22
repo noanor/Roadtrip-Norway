@@ -297,3 +297,4 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .signin input{border:1.5px solid var(--line);border-radius:12px;padding:12px;background:var(--card);color:var(--ink);font-weight:500;font-size:16px}
 .ask{display:flex;flex-direction:column;gap:8px}
 .field.via{margin-right:54px}
+.note-inline{margin:0;padding:10px 12px;border-radius:12px;background:#fbeee6;color:#7a3a1a;font-size:13px;line-height:1.4}

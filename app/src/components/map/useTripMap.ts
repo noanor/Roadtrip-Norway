@@ -4,11 +4,12 @@ import { useToast } from '../../context/ToastContext';
 import { useTrip } from '../../context/TripContext';
 import { STOPS } from '../../data/stops';
 import { dayCount, dayOfStop, dayRange, daySuggestions, tripPoints } from '../../domain/trip';
+import type { RouteTemplate } from '../../types';
 import { useDrivingRoute } from './useDrivingRoute';
 
 /** Everything a page needs to render <TripMap> for one day (or the whole trip when day is null). */
-export function useTripMap(day: number | null, showSuggestions = true) {
-  const { state, dispatch, route } = useTrip();
+export function useTripMap(route: RouteTemplate, day: number | null, showSuggestions = true) {
+  const { state, dispatch } = useTrip();
   const navigate = useNavigate();
   const toast = useToast();
   const days = dayCount(state, route);
@@ -28,8 +29,8 @@ export function useTripMap(day: number | null, showSuggestions = true) {
     range,
     suggestions,
     drivingRoute,
-    startLabel: state.from,
-    endLabel: state.to,
+    startLabel: route.from,
+    endLabel: route.to,
     onOpenStop: (stopId: string) => navigate(`/stopp/${stopId}`, { state: { from: 'route' } }),
     /** Adds the stop to its day and returns that day. */
     onAddStop: (stopId: string): number => {

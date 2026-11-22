@@ -302,9 +302,9 @@ function distance([lat1, lng1]: LatLng, [lat2, lng2]: LatLng): number {
 }
 
 /** Where a day starts and ends: last night's place and tonight's (or the trip's own start and end). */
-function dayEnds(state: TripState, plans: DayPlan[], day: number): [LatLng, LatLng] {
-  const start = day === 1 ? cityLocation(state.from, 'from') : plans[day - 2].toLocation;
-  const end = day === plans.length ? cityLocation(state.to, 'to') : plans[day - 1].toLocation;
+function dayEnds(route: RouteTemplate, plans: DayPlan[], day: number): [LatLng, LatLng] {
+  const start = day === 1 ? route.fromLocation : plans[day - 2].toLocation;
+  const end = day === plans.length ? route.toLocation : plans[day - 1].toLocation;
   return [start, end];
 }
 
@@ -313,7 +313,7 @@ export function dayStops(state: TripState, route: RouteTemplate, day: number): s
   const plans = tripDays(state, route);
   const plan = plans[day - 1];
   if (!plan) return [];
-  const [start, end] = dayEnds(state, plans, day);
+  const [start, end] = dayEnds(route, plans, day);
   // planned stops keep their order; every other stop goes where it adds the shortest detour
   const order = plan.stops.filter((id) => isIncluded(state, plan, id));
   for (const id of plan.suggestions.filter((s) => isIncluded(state, plan, s))) {
@@ -379,14 +379,14 @@ export interface TripPoint {
 /** Ordered waypoints for the whole trip: start, every stop day by day with the night stops between, end. */
 export function tripPoints(state: TripState, route: RouteTemplate): TripPoint[] {
   const plans = tripDays(state, route);
-  const points: TripPoint[] = [{ location: cityLocation(state.from, 'from'), kind: 'start' }];
+  const points: TripPoint[] = [{ location: route.fromLocation, kind: 'start' }];
   for (const plan of plans) {
     dayStops(state, route, plan.day).forEach((stopId, index) => {
       points.push({ location: STOPS[stopId].location, kind: 'stop', stopId, day: plan.day, index });
     });
     if (plan.day < plans.length) points.push({ location: plan.toLocation, kind: 'night', day: plan.day, label: plan.to });
   }
-  points.push({ location: cityLocation(state.to, 'to'), kind: 'end' });
+  points.push({ location: route.toLocation, kind: 'end' });
   return insertVia(points, viaPlaces(state), plans.length);
 }
 
@@ -398,7 +398,8 @@ function insertVia(points: TripPoint[], via: string[], days: number): TripPoint[
   const result = [...points];
   let earliest = 0;
   for (const name of via) {
-    const here = cityLocation(name, 'to');
+    const here = cityLocation(name);
+    if (!here) continue;
     let at = earliest;
     let shortest = Infinity;
     for (let i = earliest; i < result.length - 1; i++) {

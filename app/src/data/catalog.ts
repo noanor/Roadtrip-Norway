@@ -4,7 +4,6 @@ import type {
   ExploreRoute,
   InterestId,
   LatLng,
-  RouteTemplate,
   Vehicle,
 } from '../types';
 
@@ -23,20 +22,6 @@ export const VEHICLES: Vehicle[] = ['Bil', 'MC', 'Bobil', 'Campingvogn'];
 
 /** How much longer the same road takes. Motorhomes and caravans drive slower, mostly uphill and on narrow roads. */
 export const VEHICLE_SPEED_FACTOR: Record<Vehicle, number> = { Bil: 1, MC: 1, Bobil: 1.15, Campingvogn: 1.2 };
-
-/** The only fully planned route so far. Other from/to pairs reuse it until routes come from the backend. */
-export const OSLO_BERGEN: RouteTemplate = {
-  id: 'oslo-bergen',
-  from: 'Oslo',
-  to: 'Bergen',
-  days: [
-    { day: 1, from: 'Oslo', to: 'Gvarv', toLocation: [59.388, 9.177], km: 178, minutes: 185, stops: ['kongsberg', 'heddal', 'lindheim'], suggestions: ['mjosey'] },
-    { day: 2, from: 'Gvarv', to: 'Rauland', toLocation: [59.7, 8.04], km: 154, minutes: 170, stops: ['vemork', 'gausta'], suggestions: ['rauland'] },
-    { day: 3, from: 'Rauland', to: 'Odda', toLocation: [60.069, 6.546], km: 162, minutes: 165, stops: ['haukeli', 'late'], suggestions: ['roldal'] },
-    { day: 4, from: 'Odda', to: 'Eidfjord', toLocation: [60.467, 7.072], km: 74, minutes: 85, stops: ['sider', 'voring'], suggestions: ['eidfjord'] },
-    { day: 5, from: 'Eidfjord', to: 'Bergen', toLocation: [60.392, 5.324], km: 150, minutes: 160, stops: ['voss', 'bryggen'], suggestions: ['floyen'] },
-  ],
-};
 
 export const EXPLORE_ROUTES: ExploreRoute[] = [
   { title: 'Oslo til Bergen over fjellet', subtitle: '5 dager · stavkirker, fjell og fjord', art: 'mount', from: 'Oslo', to: 'Bergen', days: 5 },
@@ -63,9 +48,10 @@ export function knownPlace(name: string): string | undefined {
   return PLACE_NAMES.find((c) => c.toLowerCase() === name.trim().toLowerCase());
 }
 
-export function cityLocation(name: string, fallback: 'from' | 'to'): LatLng {
-  const key = Object.keys(CITIES).find((c) => c.toLowerCase() === name.trim().toLowerCase());
-  return key ? CITIES[key] : fallback === 'from' ? CITIES.Oslo : CITIES.Bergen;
+/** Coordinates of a known place, or undefined. */
+export function cityLocation(name: string): LatLng | undefined {
+  const key = knownPlace(name);
+  return key ? CITIES[key] : undefined;
 }
 
 export const BUSINESS_PLANS: BusinessPlan[] = [

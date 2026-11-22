@@ -275,3 +275,48 @@ describe('home page', () => {
     expect(screen.getByText('3', { selector: 'output' })).toBeTruthy();
   });
 });
+
+describe('phase 2: trips between more places', () => {
+  it('tells the traveller when there is no trip between two known places', () => {
+    const router = renderAt('/');
+    fireEvent.change(screen.getByLabelText('Til'), { target: { value: 'Tromsø' } });
+    expect(screen.getByText(/Vi har ingen ferdig tur fra Oslo til Tromsø ennå/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Neste: velg interesser/ }));
+    expect(router.state.location.pathname).toBe('/');
+  });
+
+  it('a popular tour shows its own stops', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ from: 'Skien', to: 'Dalen', days: 2 }));
+    renderAt('/rute');
+    expect(screen.getAllByText(/Skien → Dalen/).length).toBeGreaterThan(0);
+    expect(screen.getByText('Henrik Ibsen-museet')).toBeTruthy();
+    expect(screen.queryByText('Heddal stavkirke')).toBeNull();
+  });
+
+  it('a trip can be driven the other way', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ from: 'bergen', to: 'oslo' }));
+    renderAt('/rute');
+    expect(screen.getAllByText(/Bergen → Oslo/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Dag 1 · Bergen → Eidfjord/)).toBeTruthy();
+  });
+
+  it('the route page explains when there is no trip', () => {
+    localStorage.setItem(config.storageKey, JSON.stringify({ from: 'Oslo', to: 'Tromsø' }));
+    renderAt('/rute');
+    expect(screen.getByText('Ingen ferdig tur ennå')).toBeTruthy();
+  });
+
+  it('a stop on another trip offers that trip', () => {
+    const router = renderAt('/stopp/ulefoss');
+    fireEvent.click(screen.getByRole('button', { name: /Planlegg Skien → Dalen/ }));
+    expect(router.state.location.pathname).toBe('/interesser');
+    expect(screen.getByText(/Skien → Dalen/)).toBeTruthy();
+  });
+
+  it('a day-trip stop plans the day trip from Oslo', () => {
+    const router = renderAt('/stopp/drobak');
+    fireEvent.click(screen.getByRole('button', { name: /Planlegg dagstur hit/ }));
+    expect(router.state.location.pathname).toBe('/interesser');
+    expect(screen.getByText(/Oslo → Frogn/)).toBeTruthy();
+  });
+});
