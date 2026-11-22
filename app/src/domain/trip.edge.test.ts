@@ -86,13 +86,14 @@ describe('restoreTripState (data saved in the browser)', () => {
 
   it('drops stops, interests and vehicles that no longer exist', () => {
     const s = restoreTripState({
-      added: { 1: ['mjosey', 'ghost'], 9: ['floyen'], x: ['late'], 2: 'rauland' },
+      added: ['mjosey', 'ghost', 'floyen', 7, 'mjosey'],
       saved: ['gausta', 'ghost', 7],
       interests: ['mat', 'shopping'],
       vehicle: 'Traktor',
     });
-    // stops saved per day by an older version are kept; the day is worked out from the route
-    expect(s.added).toEqual(['mjosey', 'floyen', 'late']);
+    expect(s.added).toEqual(['mjosey', 'floyen']);
+    // anything but a list of stops (such as the per-day format of early prototypes) starts empty
+    expect(restoreTripState({ added: { 1: ['mjosey'] } }).added).toEqual([]);
     expect(s.saved).toEqual(['gausta']);
     expect(s.interests).toEqual(['mat']);
     expect(s.vehicle).toBe(initialTripState.vehicle);

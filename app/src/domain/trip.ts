@@ -203,13 +203,7 @@ export function restoreTripState(raw: unknown): TripState {
   const s = initialTripState;
   const days = clampInt(raw.days, MIN_DAYS, MAX_DAYS, s.days);
 
-  // Older versions saved added stops per day ({ 1: ['mjosey'] }); the day is now worked out from the route.
-  const addedRaw: unknown[] = Array.isArray(raw.added)
-    ? raw.added
-    : isObject(raw.added)
-      ? Object.values(raw.added).flatMap((ids) => (Array.isArray(ids) ? ids : []))
-      : [];
-  const added = [...new Set(addedRaw.filter(isStopId))];
+  const added = Array.isArray(raw.added) ? [...new Set(raw.added.filter(isStopId))] : [];
   const removed = Array.isArray(raw.removed) ? raw.removed.filter(isStopId).filter((id) => !added.includes(id)) : [];
   const savedTrips = Array.isArray(raw.savedTrips)
     ? raw.savedTrips.map(restoreSavedTrip).filter((t): t is SavedTrip => t !== null)
@@ -403,10 +397,6 @@ export function totalStops(state: TripState, route: RouteTemplate): number {
   let n = 0;
   for (let d = 1; d <= dayCount(state, route); d++) n += dayStops(state, route, d).length;
   return n;
-}
-
-export function totalKm(state: TripState, route: RouteTemplate): number {
-  return tripDays(state, route).reduce((n, d) => n + d.km, 0);
 }
 
 /** The day a stop belongs to (on the route or suggested), or null if it is not along the route. */

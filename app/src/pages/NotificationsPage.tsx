@@ -25,7 +25,7 @@ export function NotificationsPage() {
           <Icon name="back" />
         </button>
       </div>
-      <div className="plain-h" style={{ paddingTop: 0 }}>
+      <div className="plain-h flush">
         <h1 className="display">Varsler</h1>
       </div>
       <div className="notes">

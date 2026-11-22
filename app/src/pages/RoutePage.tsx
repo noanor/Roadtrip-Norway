@@ -81,7 +81,7 @@ function RouteView({ route }: { route: RouteTemplate }) {
         <button className="iconbtn light" aria-label="Tilbake" onClick={back}>
           <Icon name="back" />
         </button>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="grow">
           {lastStep && <span className="step">Steg 3 av 3</span>}
           <h1 className="display">
             {route.from} → {route.to}
@@ -141,7 +141,7 @@ function RouteView({ route }: { route: RouteTemplate }) {
       </div>
         </>
       ) : (
-        <div className="dayinfo" style={{ paddingTop: 12 }}>
+        <div className="dayinfo whole">
           <b>Hele turen</b>
           <span>
             {numbers[0].km} km · {formatDuration(numbers[0].minutes)} kjøring
@@ -213,8 +213,8 @@ function RouteView({ route }: { route: RouteTemplate }) {
 
       {allSuggestions.length > 0 && (
         <>
-          <div className="section-h" style={{ paddingTop: 18 }}>
-            <h2 style={{ fontSize: 18 }}>Forslag langs veien</h2>
+          <div className="section-h sub">
+            <h2>Forslag langs veien</h2>
           </div>
           {canFilterServing && (
             <div className="filterchips">
@@ -234,7 +234,7 @@ function RouteView({ route }: { route: RouteTemplate }) {
         </>
       )}
 
-      <div className="pad" style={{ paddingTop: 18, paddingBottom: 18 }}>
+      <div className="pad foot">
         {day < days ? (
           <button className="cta green" onClick={() => dispatch({ type: 'setActiveDay', day: day + 1 })}>
             Fortsett til dag {day + 1} <Icon name="arrow" />

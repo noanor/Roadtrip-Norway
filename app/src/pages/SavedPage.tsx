@@ -10,11 +10,11 @@ export function SavedPage() {
     <>
       <div className="plain-h">
         <h1 className="display">Lagret</h1>
-        <p className="muted" style={{ margin: '6px 0 0' }}>
+        <p className="muted lead">
           Steder du vil huske til neste tur.
         </p>
       </div>
-      <div className="list" style={{ paddingTop: 8 }}>
+      <div className="list top">
         {stops.length ? (
           stops.map((s) => <StopListItem key={s.id} stop={s} />)
         ) : (

@@ -101,7 +101,7 @@ export function StopDetailPage() {
       <div className="d-body">
         {stop.sponsored && (
           <div>
-            <span className="badge ad" style={{ margin: '0 0 4px' }}>
+            <span className="badge ad flat">
               Annonse
             </span>
             <p className="adnote">
@@ -111,9 +111,9 @@ export function StopDetailPage() {
         )}
         <div>
           <h1 className="display">{stop.name}</h1>
-          <div className="rating" style={{ marginTop: 6 }}>
+          <div className="rating">
             <Icon name="star" />
-            <b style={{ color: 'var(--ink)' }}>{String(stop.rating).replace('.', ',')}</b> ({stop.reviewCount}) · {stop.type} · {stop.place}
+            <b className="ink">{String(stop.rating).replace('.', ',')}</b> ({stop.reviewCount}) · {stop.type} · {stop.place}
           </div>
         </div>
 
@@ -167,18 +167,18 @@ export function StopDetailPage() {
         </div>
 
         <div>
-          <div className="eyebrow" style={{ marginBottom: 8 }}>
+          <div className="eyebrow label">
             Anmeldelser
             {reviews && reviews.length > 0 && ` · viser ${reviews.length} av ${stop.reviewCount}`}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="stack">
             {reviews && reviews.length === 0 && <p className="adnote">Ingen anmeldelser å vise ennå.</p>}
             {(reviews ?? []).map((r) => (
               <div className="review" key={r.author}>
                 <header>
                   <span className="avatar">{r.initials}</span>
                   {r.author}
-                  <span className="muted" style={{ fontWeight: 500, marginLeft: 'auto' }}>
+                  <span className="muted score">
                     <Icon name="star" /> {r.rating}
                   </span>
                 </header>
@@ -211,7 +211,7 @@ export function StopDetailPage() {
               {answers.length ? 'Nytt spørsmål til eieren?' : 'Spørsmål til eieren?'}
             </button>
           ) : (
-            <form onSubmit={submitQuestion} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <form className="stack" onSubmit={submitQuestion}>
               <textarea
                 id="askText"
                 autoFocus

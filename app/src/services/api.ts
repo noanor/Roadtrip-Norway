@@ -17,7 +17,7 @@ export async function askOwner(stopId: string, question: string): Promise<void> 
 }
 
 /** How long the mock owner takes to answer. */
-export const OWNER_ANSWER_DELAY_MS = 4000;
+const OWNER_ANSWER_DELAY_MS = 4000;
 
 /**
  * Waits for the owner's answer. Mock: a friendly reply after a few seconds. With a backend this becomes a

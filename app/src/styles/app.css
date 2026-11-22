@@ -141,7 +141,8 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .dayinfo{padding:10px 18px 8px;font-size:12px;color:var(--muted)}
 .dayinfo b{display:block;font-size:14px;color:var(--ink)}
 .dayinfo span{display:block;margin-top:2px}
-.route-head .step{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:2px}
+.step{font-size:12px;font-weight:600;color:var(--muted)}
+.route-head .step{display:block;margin-bottom:2px}
 .list{display:flex;flex-direction:column;gap:8px;padding:0 18px}
 .item{display:flex;align-items:center;gap:12px;padding:8px;background:var(--card);border-radius:14px;text-align:left;border:1px solid var(--line);width:100%}
 .item .art{width:56px;height:56px;border-radius:10px;overflow:hidden;flex:none}
@@ -172,7 +173,7 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .d-hero .tools{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between}
 .d-body{background:var(--paper);border-radius:22px 22px 0 0;margin-top:-22px;position:relative;padding:18px 18px 24px;display:flex;flex-direction:column;gap:14px}
 .d-body h1{font-size:30px}
-.rating{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.rating{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:13px;color:var(--muted)}
 .rating .ic{color:var(--mustard);width:15px;height:15px}
 .d-actions{display:flex;gap:8px}
 .d-actions .cta{flex:1;padding:13px}
@@ -295,7 +296,6 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .signin input{border:1.5px solid var(--line);border-radius:12px;padding:12px;background:var(--card);color:var(--ink);font-weight:500;font-size:16px}
 .ask{display:flex;flex-direction:column;gap:8px}
 .field.via{margin-right:54px}
-.note-inline{margin:0;padding:10px 12px;border-radius:12px;background:#fbeee6;color:#7a3a1a;font-size:13px;line-height:1.4}
 /* fase 3: mine ruter */
 .trips{display:flex;flex-direction:column;gap:8px;padding:0 18px}
 .trip-card{display:flex;align-items:center;gap:10px;width:100%;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:6px 8px 6px 14px;text-align:left}
@@ -312,3 +312,34 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .seg2 button{min-height:44px;border-radius:9px;font-weight:600;font-size:13px;color:var(--muted)}
 .seg2 button.on{background:var(--green);color:#fff}
 .choice + .help{margin-top:-6px}
+/* fase 6: former inline styles */
+.grow{flex:1;min-width:0}
+.ink{color:var(--ink)}
+.lead{margin:8px 0 0;line-height:1.5}
+.stack{display:flex;flex-direction:column;gap:8px}
+.item-open{display:contents}
+svg.art{display:block;width:100%;height:100%}
+.plain-h.flush{padding-top:0}
+.pad.intro{padding-top:18px}
+.pad.intro h1{font-size:30px}
+.pad.below{padding-top:16px}
+.pad.foot{padding-top:18px;padding-bottom:18px}
+.pad.lead-card{padding-bottom:14px}
+.list.top{padding-top:8px}
+.badge.inline{margin:0}
+.badge.flat{margin:0 0 4px}
+.success h2{font-size:24px}
+.success p{margin:0;line-height:1.5}
+.profile-head{display:flex;align-items:center;gap:12px;padding:0 18px 16px}
+.profile-head .muted{font-size:12px}
+.avatar.lg{width:52px;height:52px;font-size:16px}
+.btn-outline.small{width:auto;padding:10px 14px}
+.owner-link.wide{width:100%}
+.signin .help{margin:0}
+.dayinfo.whole{padding-top:12px}
+.section-h.sub{padding-top:18px}
+.section-h.sub h2{font-size:18px}
+.setting b{margin:0}
+.setting-help{margin:8px 0 0;font-size:12.5px}
+.eyebrow.label{display:block;margin-bottom:8px}
+.review header .score{font-weight:500;margin-left:auto}

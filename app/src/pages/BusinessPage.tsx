@@ -42,12 +42,12 @@ export function BusinessPage() {
           <span className="ok">
             <Icon name="check" />
           </span>
-          <h2 className="display" style={{ fontSize: 24 }}>
+          <h2 className="display">
             Takk, vi har mottatt registreringen
           </h2>
-          <p className="muted" style={{ margin: 0, lineHeight: 1.5 }}>
+          <p className="muted">
             Vi går gjennom bedriften og tar kontakt innen to virkedager. Valgt pakke:{' '}
-            <b style={{ color: 'var(--ink)' }}>{BUSINESS_PLANS.find((p) => p.id === plan)?.title}</b>.
+            <b className="ink">{BUSINESS_PLANS.find((p) => p.id === plan)?.title}</b>.
           </p>
           <button className="btn-outline" onClick={() => navigate('/')}>
             Tilbake til forsiden

@@ -33,23 +33,23 @@ export function ProfilePage() {
       <div className="plain-h">
         <h1 className="display">Profil</h1>
       </div>
-      <div className="pad" style={{ display: 'flex', alignItems: 'center', gap: 12, paddingBottom: 16 }}>
-        <span className="avatar" style={{ width: 52, height: 52, fontSize: 16 }}>
+      <div className="profile-head">
+        <span className="avatar lg">
           {profile ? initials(profile.name) : 'G'}
         </span>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="grow">
           <b>{profile ? profile.name : 'Gjest'}</b>
-          <div className="muted" style={{ fontSize: 12 }}>
+          <div className="muted">
             {profile ? profile.email : 'Rutene lagres på denne enheten'}
           </div>
         </div>
         {profile ? (
-          <button className="btn-outline" style={{ width: 'auto', padding: '10px 14px' }} onClick={() => dispatch({ type: 'signOut' })}>
+          <button className="btn-outline small" onClick={() => dispatch({ type: 'signOut' })}>
             Logg ut
           </button>
         ) : (
           !signingIn && (
-            <button className="btn-outline" style={{ width: 'auto', padding: '10px 14px' }} onClick={() => setSigningIn(true)}>
+            <button className="btn-outline small" onClick={() => setSigningIn(true)}>
               Logg inn
             </button>
           )
@@ -68,7 +68,7 @@ export function ProfilePage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <p className="help" style={{ margin: 0 }}>
+          <p className="help">
             Prototype: navnet og e-posten lagres bare på denne enheten.
           </p>
           <button className="cta" type="submit">
@@ -104,8 +104,8 @@ export function ProfilePage() {
           <Icon name="chev" />
         </button>
       </div>
-      <div className="pad" style={{ paddingTop: 16 }}>
-        <button className="owner-link" style={{ width: '100%' }} onClick={() => navigate('/for-aktorer')}>
+      <div className="pad below">
+        <button className="owner-link wide" onClick={() => navigate('/for-aktorer')}>
           <Icon name="store" />
           <span>For lokale aktører: bli synlig for bilturister</span>
           <Icon name="chev" />

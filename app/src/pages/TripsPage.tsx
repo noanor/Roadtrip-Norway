@@ -37,7 +37,7 @@ export function TripsPage() {
       </div>
 
       {route && !currentIsSaved && (
-        <div className="pad" style={{ paddingBottom: 14 }}>
+        <div className="pad lead-card">
           <button className="trip-card current" onClick={() => navigate('/rute')}>
             <span className="txt">
               <small>Turen du planlegger nå · ikke lagret</small>

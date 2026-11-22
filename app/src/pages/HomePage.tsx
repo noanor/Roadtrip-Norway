@@ -188,7 +188,7 @@ export function HomePage() {
             <span className="art">
               <StopArt kind={r.art} />
             </span>
-            <span style={{ flex: 1, minWidth: 0 }}>
+            <span className="grow">
               <b>{r.title}</b>
               <span>{r.subtitle}</span>
             </span>
