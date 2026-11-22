@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { BottomNav, showsNav } from '../components/BottomNav';
 import { ToastProvider } from '../context/ToastContext';
+import { useDragScroll } from '../hooks/useDragScroll';
 
 /** How long the scroll indicator stays after scrolling stops, as on iOS. */
 const INDICATOR_MS = 900;
@@ -15,6 +16,7 @@ export function AppLayout() {
   const screen = useRef<HTMLDivElement>(null);
   const indicator = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
+  useDragScroll();
 
   useEffect(() => {
     if (screen.current) screen.current.scrollTop = 0;
