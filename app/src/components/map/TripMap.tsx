@@ -51,7 +51,7 @@ export function TripMap(props: Props) {
         bounds={bounds}
         boundsOptions={{ padding: mode === 'full' ? [70, 70] : [28, 28] }}
         zoomControl={false}
-        scrollWheelZoom={mode === 'full'}
+        scrollWheelZoom
       >
         <TileLayer
           url={config.tileUrl}

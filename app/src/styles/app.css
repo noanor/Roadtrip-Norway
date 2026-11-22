@@ -350,3 +350,7 @@ svg.art{display:block;width:100%;height:100%}
 .screen::-webkit-scrollbar{display:none}
 .scroll-indicator{position:absolute;top:0;right:3px;width:3px;border-radius:3px;background:rgba(28,43,42,.45);opacity:0;transition:opacity .35s;pointer-events:none;z-index:1100}
 .scroll-indicator.on{opacity:1;transition:opacity .1s}
+/* sideways rows can be dragged with the mouse (hooks/useDragScroll.ts) */
+.hscroll,.days,.map-chips{cursor:grab}
+.hscroll.dragging,.days.dragging,.map-chips.dragging{cursor:grabbing;user-select:none}
+.dragging *{cursor:grabbing}
