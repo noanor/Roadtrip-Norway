@@ -30,7 +30,10 @@ export function StopListItem({ stop, number, badge, highlight, from, onRemove }:
           {stop.type} · {stop.place}
           {stop.serving && ' · Servering'}
         </small>
-        {badge && <span className={`badge ${badge.tone}`}>{badge.text}</span>}
+        <span className="badges">
+          {stop.sponsored && <span className="badge ad">Annonse</span>}
+          {badge && <span className={`badge ${badge.tone}`}>{badge.text}</span>}
+        </span>
       </span>
     </>
   );
@@ -38,7 +41,7 @@ export function StopListItem({ stop, number, badge, highlight, from, onRemove }:
   if (onRemove) {
     return (
       <div className={`item ${highlight ? 'new' : ''}`}>
-        <button style={{ display: 'contents' }} onClick={open}>
+        <button className="item-open" onClick={open}>
           {body}
         </button>
         <button className="rmmini" aria-label={`Fjern ${stop.name} fra ruten`} onClick={onRemove}>
@@ -69,7 +72,7 @@ export function SuggestionItem({ stop, match, onAdd }: SuggestionProps) {
   const navigate = useNavigate();
   return (
     <div className="item">
-      <button style={{ display: 'contents' }} onClick={() => navigate(`/stopp/${stop.id}`, { state: { from: 'route' } })}>
+      <button className="item-open" onClick={() => navigate(`/stopp/${stop.id}`, { state: { from: 'route' } })}>
         <span className="art">
           <StopArt kind={stop.art} />
         </span>

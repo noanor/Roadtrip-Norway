@@ -16,18 +16,18 @@ export function InterestsPage() {
         <button className="iconbtn light" aria-label="Tilbake" onClick={back}>
           <Icon name="back" />
         </button>
-        <span className="muted" style={{ fontWeight: 600, fontSize: 12 }}>
+        <span className="step">
           Steg 2 av 3
         </span>
       </div>
       <div className="progress">
         <i />
       </div>
-      <div className="pad" style={{ paddingTop: 18 }}>
-        <h1 className="display" style={{ fontSize: 30 }}>
+      <div className="pad intro">
+        <h1 className="display">
           Hva vil dere oppleve på turen?
         </h1>
-        <p className="muted" style={{ margin: '8px 0 0', lineHeight: 1.45 }}>
+        <p className="muted lead">
           Velg så mange du vil. Vi foreslår stopp langs {state.from} → {state.to} som passer dere.
         </p>
       </div>
@@ -49,7 +49,7 @@ export function InterestsPage() {
           disabled={count === 0}
           onClick={() => {
             dispatch({ type: 'setActiveDay', day: 1 });
-            navigate('/rute');
+            navigate('/rute', { state: { step: 3 } });
           }}
         >
           Vis forslag til rute ({count} valgt) <Icon name="arrow" />

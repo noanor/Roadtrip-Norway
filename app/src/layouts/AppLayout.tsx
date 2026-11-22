@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { BottomNav, NAV_PATHS } from '../components/BottomNav';
+import { BottomNav, showsNav } from '../components/BottomNav';
 import { ToastProvider } from '../context/ToastContext';
 
 /** Phone-sized shell: scrollable screen, bottom navigation on top-level pages, and the toast. */
@@ -18,7 +18,7 @@ export function AppLayout() {
         <main className="screen enter" key={pathname} ref={screen}>
           <Outlet />
         </main>
-        {NAV_PATHS.has(pathname) && <BottomNav />}
+        {showsNav(pathname) && <BottomNav />}
       </ToastProvider>
     </div>
   );

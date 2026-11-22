@@ -1,14 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { useBack } from '../hooks/useBack';
 import { StopMap } from '../components/map/StopMap';
 import { StopArt } from '../components/StopArt';
 import { useToast } from '../context/ToastContext';
 import { useTrip } from '../context/TripContext';
+import { findRoute, routeWithStop } from '../data/routes';
 import { getStop, priceLabel } from '../data/stops';
-import { dayOfStop, isOnRoute } from '../domain/trip';
-import { askOwner, getReviews } from '../services/api';
+import { dayOfStop, isOnRoute, suitsVehicle } from '../domain/trip';
+import { askOwner, getReviews, waitForOwnerAnswer } from '../services/api';
 import type { Review } from '../types';
 
 export function StopDetailPage() {
@@ -17,7 +18,6 @@ export function StopDetailPage() {
   const { state, dispatch, route } = useTrip();
   const navigate = useNavigate();
   const back = useBack('/rute');
-  const location = useLocation();
   const toast = useToast();
   const [reviews, setReviews] = useState<Review[] | null>(null);
   const [question, setQuestion] = useState<'idle' | 'writing' | 'sending' | 'sent'>('idle');
@@ -43,11 +43,16 @@ export function StopDetailPage() {
     );
   }
 
-  const day = dayOfStop(state, route, stop.id);
+  const day = route ? dayOfStop(state, route, stop.id) : null;
   const price = priceLabel(stop);
-  const added = isOnRoute(state, route, stop.id);
+  const added = route ? isOnRoute(state, route, stop.id) : false;
+  // Not along the current trip: offer a day trip from Oslo, or the planned trip that passes it.
+  const trip = day === null ? (findRoute('Oslo', stop.place) ?? routeWithStop(stop.id)) : undefined;
+  const isDayTrip = trip?.from === 'Oslo' && trip.days.length === 1;
   const saved = state.saved.includes(stop.id);
-  const cameFromRoute = (location.state as { from?: string } | null)?.from === 'route';
+  const fits = suitsVehicle(state, stop.id);
+  const answers = state.notifications.filter((n) => n.stopId === stop.id);
+  const waiting = question === 'sent' && !answers.some((n) => n.question === questionText);
 
   const toggleSaved = () => {
     dispatch({ type: 'toggleSaved', stopId: stop.id });
@@ -57,10 +62,8 @@ export function StopDetailPage() {
   const addToRoute = () => {
     if (day === null) return;
     dispatch({ type: 'addStop', stopId: stop.id, day });
-    toast(`${stop.name} er lagt til dag ${day}`);
-    // Figma flow: Stoppdetaljer → Rute & Kart 2
-    if (cameFromRoute) navigate(-1);
-    else navigate('/rute');
+    // stay on the page: the traveller may want to read on, save or ask the owner
+    toast(`${stop.name} er lagt til ${state.flexible ? `dag ${day}` : 'i ruten'}`);
   };
 
   const removeFromRoute = () => {
@@ -71,8 +74,17 @@ export function StopDetailPage() {
   const submitQuestion = async (e: FormEvent) => {
     e.preventDefault();
     setQuestion('sending');
-    await askOwner(stop.id, questionText);
+    const asked = questionText;
+    await askOwner(stop.id, asked);
     setQuestion('sent');
+    // Keeps waiting after the traveller leaves the page: the answer arrives as a notification.
+    waitForOwnerAnswer(stop.id, stop.name, asked).then((answer) => {
+      dispatch({
+        type: 'addNotification',
+        notification: { id: `n_${Date.now()}`, stopId: stop.id, question: asked, answer, at: new Date().toISOString(), read: false },
+      });
+      toast(`${stop.name} har svart på spørsmålet ditt`);
+    });
   };
 
   return (
@@ -83,16 +95,13 @@ export function StopDetailPage() {
           <button className="iconbtn light" aria-label="Tilbake" onClick={back}>
             <Icon name="back" />
           </button>
-          <button className="iconbtn light" aria-label={saved ? 'Fjern fra lagret' : 'Lagre'} onClick={toggleSaved}>
-            <Icon name="bookmark" />
-          </button>
         </div>
       </div>
 
       <div className="d-body">
         {stop.sponsored && (
           <div>
-            <span className="badge ad" style={{ margin: '0 0 4px' }}>
+            <span className="badge ad flat">
               Annonse
             </span>
             <p className="adnote">
@@ -102,49 +111,43 @@ export function StopDetailPage() {
         )}
         <div>
           <h1 className="display">{stop.name}</h1>
-          <div className="rating" style={{ marginTop: 6 }}>
+          <div className="rating">
             <Icon name="star" />
-            <b style={{ color: 'var(--ink)' }}>{String(stop.rating).replace('.', ',')}</b> ({stop.reviewCount}) · {stop.type} · {stop.place}
+            <b className="ink">{String(stop.rating).replace('.', ',')}</b> ({stop.reviewCount}) · {stop.type} · {stop.place}
           </div>
         </div>
 
         <div className="d-actions">
-          {day === null ? (
-            <button
-              className="cta green"
-              onClick={() => {
-                dispatch({ type: 'setRoute', from: 'Oslo', to: stop.place });
-                toast(`Dagstur til ${stop.place} er klar til planlegging`);
-                navigate('/');
-              }}
-            >
-              <Icon name="route" /> Planlegg dagstur hit
+          {!fits ? (
+            <button className="cta green" disabled>
+              <Icon name="warn" /> Passer ikke for {state.vehicle.toLowerCase()}
             </button>
+          ) : day === null ? (
+            trip && (
+              <button
+                className="cta green"
+                onClick={() => {
+                  dispatch({ type: 'setRoute', from: trip.from, to: trip.to });
+                  dispatch({ type: 'setDays', days: trip.days.length });
+                  navigate('/interesser');
+                }}
+              >
+                <Icon name="route" /> {isDayTrip ? 'Planlegg dagstur hit' : `Planlegg ${trip.from} → ${trip.to}`}
+              </button>
+            )
           ) : added ? (
-            <button
-              className="cta green"
-              onClick={() => {
-                dispatch({ type: 'setActiveDay', day });
-                navigate('/rute');
-              }}
-            >
-              <Icon name="check" /> Lagt til i ruten
+            <button className="cta outline" onClick={removeFromRoute}>
+              <Icon name="close" /> Fjern fra ruten
             </button>
           ) : (
             <button className="cta green" onClick={addToRoute}>
-              <Icon name="plus" /> Legg til rute
+              <Icon name="plus" /> Legg til i ruten
             </button>
           )}
           <button className={`sq ${saved ? 'on' : ''}`} aria-label={saved ? 'Fjern fra lagret' : 'Lagre'} aria-pressed={saved} onClick={toggleSaved}>
             <Icon name="bookmark" />
           </button>
         </div>
-
-        {added && (
-          <button className="btn-outline" onClick={removeFromRoute}>
-            <Icon name="close" /> Fjern fra ruten
-          </button>
-        )}
 
         <p className="d-desc">{stop.description}</p>
         <StopMap stop={stop} />
@@ -164,18 +167,18 @@ export function StopDetailPage() {
         </div>
 
         <div>
-          <div className="eyebrow" style={{ marginBottom: 8 }}>
+          <div className="eyebrow label">
             Anmeldelser
             {reviews && reviews.length > 0 && ` · viser ${reviews.length} av ${stop.reviewCount}`}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="stack">
             {reviews && reviews.length === 0 && <p className="adnote">Ingen anmeldelser å vise ennå.</p>}
             {(reviews ?? []).map((r) => (
               <div className="review" key={r.author}>
                 <header>
                   <span className="avatar">{r.initials}</span>
                   {r.author}
-                  <span className="muted" style={{ fontWeight: 500, marginLeft: 'auto' }}>
+                  <span className="muted score">
                     <Icon name="star" /> {r.rating}
                   </span>
                 </header>
@@ -186,17 +189,29 @@ export function StopDetailPage() {
         </div>
 
         <div className="ask">
-          {question === 'sent' ? (
+          {answers.map((n) => (
+            <div className="review" key={n.id}>
+              <b>Du spurte: {n.question}</b>
+              <p>{n.answer}</p>
+            </div>
+          ))}
+          {waiting ? (
             <div className="review">
               <b>Spørsmålet er sendt</b>
-              <p className="muted">{stop.name} svarer vanligvis innen en dag. Svaret dukker opp her.</p>
+              <p className="muted">{stop.name} svarer vanligvis innen en dag. Svaret dukker opp her og under Varsler.</p>
             </div>
-          ) : question === 'idle' ? (
-            <button className="btn-outline" onClick={() => setQuestion('writing')}>
-              Spørsmål til eieren?
+          ) : question === 'idle' || question === 'sent' ? (
+            <button
+              className="btn-outline"
+              onClick={() => {
+                setQuestionText('');
+                setQuestion('writing');
+              }}
+            >
+              {answers.length ? 'Nytt spørsmål til eieren?' : 'Spørsmål til eieren?'}
             </button>
           ) : (
-            <form onSubmit={submitQuestion} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <form className="stack" onSubmit={submitQuestion}>
               <textarea
                 id="askText"
                 autoFocus
@@ -212,11 +227,6 @@ export function StopDetailPage() {
           )}
         </div>
 
-        <button className="owner-link" onClick={() => navigate('/for-aktorer')}>
-          <Icon name="store" />
-          <span>Driver du et sted langs veien? Bli synlig for bilturister.</span>
-          <Icon name="chev" />
-        </button>
       </div>
     </>
   );

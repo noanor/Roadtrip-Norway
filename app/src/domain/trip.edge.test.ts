@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OSLO_BERGEN } from '../data/catalog';
+import { OSLO_BERGEN } from '../data/routes';
 import {
   dayCount,
   dayRange,
@@ -53,7 +53,7 @@ describe('tripReducer edge cases', () => {
     expect(dayRange(points, 1, dayCount(s, route))).toEqual([0, points.length - 1]);
   });
 
-  it('falls back to Oslo and Bergen for unknown or empty places', () => {
+  it('starts and ends where the planned trip does, whatever was typed', () => {
     const s: TripState = { ...initialTripState, from: '   ', to: 'Atlantis' };
     const points = tripPoints(s, route);
     expect(points[0].location).toEqual([59.913, 10.752]);
@@ -86,13 +86,14 @@ describe('restoreTripState (data saved in the browser)', () => {
 
   it('drops stops, interests and vehicles that no longer exist', () => {
     const s = restoreTripState({
-      added: { 1: ['mjosey', 'ghost'], 9: ['floyen'], x: ['late'], 2: 'rauland' },
+      added: ['mjosey', 'ghost', 'floyen', 7, 'mjosey'],
       saved: ['gausta', 'ghost', 7],
       interests: ['mat', 'shopping'],
       vehicle: 'Traktor',
     });
-    // stops saved per day by an older version are kept; the day is worked out from the route
-    expect(s.added).toEqual(['mjosey', 'floyen', 'late']);
+    expect(s.added).toEqual(['mjosey', 'floyen']);
+    // anything but a list of stops (such as the per-day format of early prototypes) starts empty
+    expect(restoreTripState({ added: { 1: ['mjosey'] } }).added).toEqual([]);
     expect(s.saved).toEqual(['gausta']);
     expect(s.interests).toEqual(['mat']);
     expect(s.vehicle).toBe(initialTripState.vehicle);

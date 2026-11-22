@@ -14,13 +14,13 @@ export function SettingsPage() {
           <Icon name="back" />
         </button>
       </div>
-      <div className="plain-h" style={{ paddingTop: 0 }}>
+      <div className="plain-h flush">
         <h1 className="display">Innstillinger</h1>
       </div>
       <div className="textpage">
         <div className="card">
           <div className="setting">
-            <b style={{ margin: 0 }}>Maks kjøring per dag</b>
+            <b>Maks kjøring per dag</b>
             <div className="stepper">
               <button aria-label="Kortere kjøredager" disabled={state.maxDriveHours <= MIN_DRIVE_HOURS} onClick={() => dispatch({ type: 'changeMaxDrive', delta: -1 })}>
                 <Icon name="minus" />
@@ -31,7 +31,7 @@ export function SettingsPage() {
               </button>
             </div>
           </div>
-          <p className="muted" style={{ marginTop: 8, fontSize: 12.5 }}>
+          <p className="muted setting-help">
             Dager med lengre kjøretid enn dette blir markert i ruten.
           </p>
         </div>

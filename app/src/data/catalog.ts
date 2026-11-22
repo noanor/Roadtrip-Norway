@@ -4,7 +4,6 @@ import type {
   ExploreRoute,
   InterestId,
   LatLng,
-  RouteTemplate,
   Vehicle,
 } from '../types';
 
@@ -21,33 +20,15 @@ export const INTERESTS: { id: InterestId; label: string; icon: IconName }[] = [
 
 export const VEHICLES: Vehicle[] = ['Bil', 'MC', 'Bobil', 'Campingvogn'];
 
-/** The only fully planned route so far. Other from/to pairs reuse it until routes come from the backend. */
-export const OSLO_BERGEN: RouteTemplate = {
-  id: 'oslo-bergen',
-  from: 'Oslo',
-  to: 'Bergen',
-  days: [
-    { day: 1, from: 'Oslo', to: 'Gvarv', toLocation: [59.388, 9.177], km: 178, minutes: 185, stops: ['kongsberg', 'heddal', 'lindheim'], suggestions: ['mjosey'] },
-    { day: 2, from: 'Gvarv', to: 'Rauland', toLocation: [59.7, 8.04], km: 154, minutes: 170, stops: ['vemork', 'gausta'], suggestions: ['rauland'] },
-    { day: 3, from: 'Rauland', to: 'Odda', toLocation: [60.069, 6.546], km: 162, minutes: 165, stops: ['haukeli', 'late'], suggestions: ['roldal'] },
-    { day: 4, from: 'Odda', to: 'Eidfjord', toLocation: [60.467, 7.072], km: 74, minutes: 85, stops: ['sider', 'voring'], suggestions: ['eidfjord'] },
-    { day: 5, from: 'Eidfjord', to: 'Bergen', toLocation: [60.392, 5.324], km: 150, minutes: 160, stops: ['voss', 'bryggen'], suggestions: ['floyen'] },
-  ],
-};
-
-export const POPULAR_ROUTES: [string, string][] = [
-  ['Oslo', 'Bergen'],
-  ['Bergen', 'Ålesund'],
-  ['Trondheim', 'Bodø'],
-  ['Stavanger', 'Kristiansand'],
-  ['Tromsø', 'Lofoten'],
-];
+/** How much longer the same road takes. Motorhomes and caravans drive slower, mostly uphill and on narrow roads. */
+export const VEHICLE_SPEED_FACTOR: Record<Vehicle, number> = { Bil: 1, MC: 1, Bobil: 1.15, Campingvogn: 1.2 };
 
 export const EXPLORE_ROUTES: ExploreRoute[] = [
-  { title: 'Hardanger i frukttiden', subtitle: '3 dager · fjord, sider og fosser', art: 'falls', from: 'Bergen', to: 'Odda' },
-  { title: 'Telemarkskanalen', subtitle: '2 dager · sluser og stavkirker', art: 'church', from: 'Skien', to: 'Dalen' },
-  { title: 'Atlanterhavsveien', subtitle: '1 dag · kyst og broer', art: 'lake', from: 'Molde', to: 'Kristiansund' },
-  { title: 'Gamle Strynefjellsvei', subtitle: '2 dager · snø om sommeren', art: 'mount', from: 'Lom', to: 'Stryn' },
+  { title: 'Oslo til Bergen over fjellet', subtitle: '5 dager · stavkirker, fjell og fjord', art: 'mount', from: 'Oslo', to: 'Bergen', days: 5 },
+  { title: 'Hardanger i frukttiden', subtitle: '3 dager · fjord, sider og fosser', art: 'falls', from: 'Bergen', to: 'Odda', days: 3 },
+  { title: 'Telemarkskanalen', subtitle: '2 dager · sluser og stavkirker', art: 'church', from: 'Skien', to: 'Dalen', days: 2 },
+  { title: 'Atlanterhavsveien', subtitle: '1 dag · kyst og broer', art: 'lake', from: 'Molde', to: 'Kristiansund', days: 1 },
+  { title: 'Gamle Strynefjellsvei', subtitle: '2 dager · snø om sommeren', art: 'mount', from: 'Lom', to: 'Stryn', days: 2 },
 ];
 
 /** Known place coordinates. Replace with a geocoding service when free-text places are supported. */
@@ -59,9 +40,18 @@ export const CITIES: Record<string, LatLng> = {
   Jevnaker: [60.24, 10.38], Frogn: [59.66, 10.63], Kongsberg: [59.668, 9.65],
 };
 
-export function cityLocation(name: string, fallback: 'from' | 'to'): LatLng {
-  const key = Object.keys(CITIES).find((c) => c.toLowerCase() === name.trim().toLowerCase());
-  return key ? CITIES[key] : fallback === 'from' ? CITIES.Oslo : CITIES.Bergen;
+/** Place names the planner knows, for the suggestions under Fra, Til and Via. */
+export const PLACE_NAMES = Object.keys(CITIES).sort((a, b) => a.localeCompare(b, 'nb'));
+
+/** The known place with this name (any case, surrounding spaces ignored), or undefined. */
+export function knownPlace(name: string): string | undefined {
+  return PLACE_NAMES.find((c) => c.toLowerCase() === name.trim().toLowerCase());
+}
+
+/** Coordinates of a known place, or undefined. */
+export function cityLocation(name: string): LatLng | undefined {
+  const key = knownPlace(name);
+  return key ? CITIES[key] : undefined;
 }
 
 export const BUSINESS_PLANS: BusinessPlan[] = [

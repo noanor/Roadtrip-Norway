@@ -13,7 +13,7 @@ export function PricingPage() {
           <Icon name="back" />
         </button>
       </div>
-      <div className="plain-h" style={{ paddingTop: 0 }}>
+      <div className="plain-h flush">
         <h1 className="display">Pris og annonser</h1>
       </div>
       <div className="textpage">
@@ -25,7 +25,7 @@ export function PricingPage() {
           <b>Slik tjener vi penger</b>
           <p>
             Lokale bedrifter kan betale for å bli fremhevet i forslagene. Disse stedene er alltid merket{' '}
-            <span className="badge ad" style={{ margin: 0 }}>
+            <span className="badge ad inline">
               Annonse
             </span>{' '}
             og legges aldri inn i ruten din uten at du velger det selv.

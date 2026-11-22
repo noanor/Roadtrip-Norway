@@ -49,6 +49,8 @@ export interface Stop {
   sponsored?: boolean;
   /** Serves food you can sit down for (lunch, café). */
   serving?: boolean;
+  /** Vehicles the stop does not suit, e.g. a narrow road or no parking for a motorhome. */
+  notFor?: Vehicle[];
   location: LatLng;
 }
 
@@ -69,7 +71,28 @@ export interface RouteTemplate {
   id: string;
   from: string;
   to: string;
+  fromLocation: LatLng;
+  toLocation: LatLng;
+  /** Made by the app along the road (see domain/autoRoute.ts), not a hand-picked trip. */
+  auto?: boolean;
   days: DayPlan[];
+}
+
+/** An owner's answer to a question the traveller asked on a stop's page. */
+export interface AppNotification {
+  id: string;
+  stopId: string;
+  question: string;
+  answer: string;
+  /** ISO time the answer arrived. */
+  at: string;
+  read: boolean;
+}
+
+/** Prototype sign-in: kept on this device only, until a real backend exists. */
+export interface Profile {
+  name: string;
+  email: string;
 }
 
 export interface Review {
@@ -85,6 +108,7 @@ export interface ExploreRoute {
   art: ArtKind;
   from: string;
   to: string;
+  days: number;
 }
 
 export type BusinessPlanId = 'synlig' | 'fremhevet' | 'partner';

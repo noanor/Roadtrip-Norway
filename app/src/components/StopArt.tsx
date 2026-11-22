@@ -27,7 +27,6 @@ export function StopArt({ kind }: { kind: ArtKind }) {
       viewBox="0 0 200 160"
       preserveAspectRatio="xMidYMid slice"
       aria-hidden="true"
-      style={{ display: 'block', width: '100%', height: '100%' }}
       dangerouslySetInnerHTML={{ __html: markup }}
     />
   );
