@@ -240,7 +240,9 @@ function RouteView({ route }: { route: RouteTemplate }) {
             className="btn-outline"
             onClick={() => {
               dispatch({ type: 'setActiveDay', day: day + 1 });
-              document.querySelector('.screen')?.scrollTo({ top: 0, behavior: 'smooth' });
+              // back to the top to see the new day's map and stops (scrollTop, like AppLayout: works everywhere)
+              const screen = document.querySelector('.screen');
+              if (screen) screen.scrollTop = 0;
             }}
           >
             Fortsett til dag {day + 1} <Icon name="arrow" />
